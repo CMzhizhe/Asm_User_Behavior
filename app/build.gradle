@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-    //id 'com.sensorsdata.android'
+    id 'com.sensorsdata.android'
 }
 
 android {
@@ -20,7 +20,7 @@ android {
     buildTypes {
 
         debug {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
@@ -38,9 +38,9 @@ android {
     }
 }
 
-//sensorsAnalytics {
-//    disableAppClick = false
-//}
+sensorsAnalytics {
+    disableAppClick = false
+}
 
 
 dependencies {

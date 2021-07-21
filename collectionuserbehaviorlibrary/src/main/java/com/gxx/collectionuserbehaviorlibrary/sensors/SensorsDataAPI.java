@@ -113,12 +113,16 @@ public class SensorsDataAPI {
                     AppClickEventModel appClickEventModel = new AppClickEventModel();
                     appClickEventModel.setEventName(eventName);
                     SimpleDateFormat simpleCreateTimeFormat = new SimpleDateFormat("yyyy-MM-dd");
-                    appClickEventModel.setCreateTime(Long.parseLong(simpleCreateTimeFormat.format(new Date())));
+                    String yyyyMMdd = simpleCreateTimeFormat.format(new Date());
+                    Date yyyyMMddDate = simpleCreateTimeFormat.parse(yyyyMMdd);
+                    appClickEventModel.setCreateTime(yyyyMMddDate.getTime());
                     if (!TextUtils.isEmpty(mDeviceId)) {
                         appClickEventModel.setDeviceId(mDeviceId);
                     }
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    appClickEventModel.setClickTime(Long.parseLong(simpleDateFormat.format(new Date())));
+                    String yyyyMMddHHmmss = simpleDateFormat.format(new Date());
+                    Date yyyyMMddHHmmssDate = simpleDateFormat.parse(yyyyMMddHHmmss);
+                    appClickEventModel.setClickTime(yyyyMMddHHmmssDate.getTime());
 
                     if (jsonObject.has("$activity") && !TextUtils.isEmpty("$activity")) {
                         appClickEventModel.setActivityName(jsonObject.getString("$activity"));
@@ -144,6 +148,7 @@ public class SensorsDataAPI {
                     bundle.putParcelable(ML_STATISTICS_STATISTICES_MODEL,statisticesModel);
                     message.setData(bundle);
                     //使用send方法发送
+                    message.replyTo = clientMessenger;
                     serviceMessenger.send(message);
                 }
             }
@@ -165,6 +170,7 @@ public class SensorsDataAPI {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             serviceMessenger = null;
+            bindService(application);
         }
     };
 

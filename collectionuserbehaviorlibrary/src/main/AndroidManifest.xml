@@ -6,8 +6,6 @@
 
         <service
             android:name="com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService"
-            android:enabled="true"
-            android:exported="true"
             android:process=":tools" />
     </application>
 

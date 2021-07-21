@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatButton
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,13 +49,5 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-
-    /**
-     * Lambda 语法
-     */
-    private fun initLambdaButton() {
-        val button: Button = findViewById(R.id.lambdaButton)
-        button.setOnClickListener { view -> Log.e("MainActivity", "Lambda Click") }
-    }
 
 }
