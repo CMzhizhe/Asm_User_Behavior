@@ -13,9 +13,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        //initButton()
-        //initLambdaButton();
-
         val test_recycler_adapter_bt =
             findViewById<Button>(R.id.bt_main_test_base_recycler_adapter);
         test_recycler_adapter_bt.setOnClickListener(object : View.OnClickListener {

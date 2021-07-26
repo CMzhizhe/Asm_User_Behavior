@@ -40,6 +40,7 @@ android {
 
 sensorsAnalytics {
     disableAppClick = false
+    excludeString = "TestRecyclerAdapterActivity,MainActivity"
 }
 
 

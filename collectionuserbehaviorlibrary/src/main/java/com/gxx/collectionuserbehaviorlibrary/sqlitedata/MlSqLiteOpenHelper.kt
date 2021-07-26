@@ -41,7 +41,7 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
             "createTime long," +//创建时间   yyyy-MM-dd
             "pageStartTime long," +//页面开始时间  yyyy-MM-dd HH:mm:ss
             "pageEndTime long," +//页面结束时间   yyyy-MM-dd HH:mm:ss
-            "fromRoute varchar(100)" + //来源路径，可以为空
+            "fromRoute varchar(100)," + //来源路径，可以为空
             "extrans varchar(255)" + //额外参数，可以为空
             " )";
 

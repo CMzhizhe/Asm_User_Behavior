@@ -4,7 +4,9 @@ import android.app.Service
 import android.content.ContentValues
 import android.content.Intent
 import android.os.*
+import android.text.TextUtils
 import android.util.Log
+import com.google.gson.Gson
 import com.gxx.collectionuserbehaviorlibrary.model.AppClickEventModel
 import com.gxx.collectionuserbehaviorlibrary.model.StatisticesModel
 import com.gxx.collectionuserbehaviorlibrary.sqlitedata.MlSqLiteOpenHelper
@@ -17,8 +19,6 @@ import java.lang.ref.WeakReference
  * @Descriptiion 统计service
  **/
 class MlStatisticsService : Service() {
-
-
     var mlSqLiteOpenHelper: MlSqLiteOpenHelper? = null;
     val messengerHandler = MessengerHandler(this, Looper.getMainLooper());
     val messenger = Messenger(messengerHandler);
@@ -26,7 +26,7 @@ class MlStatisticsService : Service() {
     companion object {
         const val TAG = "MlStatisticsService";
 
-        const val ML_STATISTICS_STATISTICES_MODEL = "StatisticesModel"
+        const val ML_STATISTICS_STATISTICES_JSON_MODEL = "StatisticesJsonModel"
 
         const val ML_STATISTICS_INSERT_APP_CLICK = "InsertAppClick";//点击行为
         const val ML_STATISTICS_APP_PAGE = "AppPage";//页面统计
@@ -39,6 +39,7 @@ class MlStatisticsService : Service() {
 
 
     class MessengerHandler : Handler {
+        val gson = Gson();
         var mlStatisticsServiceWeakReference: WeakReference<MlStatisticsService>? = null;
 
         constructor(mlStatisticsService: MlStatisticsService, looper: Looper) : super(looper) {
@@ -50,12 +51,12 @@ class MlStatisticsService : Service() {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
             val bundle = msg.data;
-            val statisticesModel = bundle.getParcelable<StatisticesModel>(ML_STATISTICS_STATISTICES_MODEL);
-            if (statisticesModel != null && mlStatisticsServiceWeakReference != null && mlStatisticsServiceWeakReference!!.get() != null) {
+            val statisticesModelJsonString =  bundle.getString(ML_STATISTICS_STATISTICES_JSON_MODEL,"");
+            if (!TextUtils.isEmpty(statisticesModelJsonString) && mlStatisticsServiceWeakReference != null && mlStatisticsServiceWeakReference!!.get() != null) {
                 if (mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper == null) {
                     mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper = MlSqLiteOpenHelper(mlStatisticsServiceWeakReference!!.get()!!.applicationContext);
                 }
-
+                val statisticesModel = gson.fromJson<StatisticesModel>(statisticesModelJsonString,StatisticesModel::class.java)
                 //存储数据到本地数据库
                 if (statisticesModel.statisticesType.equals(ML_STATISTICS_INSERT_APP_CLICK)) {
                     val appClickEventModel = statisticesModel.appClickEventModel;

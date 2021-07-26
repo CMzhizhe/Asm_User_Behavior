@@ -2,7 +2,6 @@ package com.gxx.collectionuserbehaviorlibrary.sensors;
 
 import android.app.Application;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -11,13 +10,13 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.gxx.collectionuserbehaviorlibrary.model.AppClickEventModel;
 import com.gxx.collectionuserbehaviorlibrary.model.StatisticesModel;
 import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService;
@@ -30,13 +29,15 @@ import java.util.Map;
 
 import static android.content.Context.BIND_AUTO_CREATE;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_INSERT_APP_CLICK;
-import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_STATISTICES_MODEL;
+import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_STATISTICES_JSON_MODEL;
 
 /**
  * Created by 王灼洲 on 2018/7/22
  */
 public class SensorsDataAPI {
     private final String TAG = this.getClass().getSimpleName();
+    private Gson gson = new Gson();
+    private SimpleDateFormat simpleCreateTimeFormat = new SimpleDateFormat("yyyy-MM-dd");
     private static SensorsDataAPI INSTANCE;
     public static final String SENSORS_DATA_API_SERVICE_MESSAGE = "serviceMessage";
     public static final String SDK_VERSION = "1.0.0";
@@ -91,61 +92,43 @@ public class SensorsDataAPI {
      */
     public void track(@NonNull final String eventName, @Nullable JSONObject properties) {
         try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("event", eventName);
-            jsonObject.put("device_id", mDeviceId);
-            JSONObject sendProperties = new JSONObject(mDeviceInfo);
-
-            if (properties != null) {
-                SensorsDataPrivate.mergeJSONObject(properties, sendProperties);
-            }
-
-            jsonObject.put("properties", sendProperties);
-            jsonObject.put("time", System.currentTimeMillis());
-
-            if (onSensorsDataAPITrackClickListener != null) {
-                onSensorsDataAPITrackClickListener.onSensorsDataAPITrackClick(jsonObject);
-            }
-
-            if (serviceMessenger != null) {
+            if (serviceMessenger != null && properties!=null) {
                 //事件点击事件
                 if (eventName.equals("$AppClick")) {
                     AppClickEventModel appClickEventModel = new AppClickEventModel();
-                    appClickEventModel.setEventName(eventName);
-                    SimpleDateFormat simpleCreateTimeFormat = new SimpleDateFormat("yyyy-MM-dd");
                     String yyyyMMdd = simpleCreateTimeFormat.format(new Date());
                     Date yyyyMMddDate = simpleCreateTimeFormat.parse(yyyyMMdd);
+
+                    appClickEventModel.setEventName(eventName);
                     appClickEventModel.setCreateTime(yyyyMMddDate.getTime());
+                    appClickEventModel.setClickTime(System.currentTimeMillis());
+
                     if (!TextUtils.isEmpty(mDeviceId)) {
                         appClickEventModel.setDeviceId(mDeviceId);
                     }
-                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    String yyyyMMddHHmmss = simpleDateFormat.format(new Date());
-                    Date yyyyMMddHHmmssDate = simpleDateFormat.parse(yyyyMMddHHmmss);
-                    appClickEventModel.setClickTime(yyyyMMddHHmmssDate.getTime());
 
-                    if (jsonObject.has("$activity") && !TextUtils.isEmpty("$activity")) {
-                        appClickEventModel.setActivityName(jsonObject.getString("$activity"));
+                    if (properties.has("$activity") && !TextUtils.isEmpty(properties.getString("$activity"))) {
+                        appClickEventModel.setActivityName(properties.getString("$activity"));
                     }
 
-                    if (jsonObject.has("$element_content") && !TextUtils.isEmpty("$element_content")) {
-                        appClickEventModel.setElementContent(jsonObject.getString("$element_content"));
+                    if (properties.has("$element_content") && !TextUtils.isEmpty(properties.getString("$element_content"))) {
+                        appClickEventModel.setElementContent(properties.getString("$element_content"));
                     }
 
-                    if (jsonObject.has("$element_type") && !TextUtils.isEmpty("$element_type")) {
-                        appClickEventModel.setElementType(jsonObject.getString("$element_type"));
+                    if (properties.has("$element_type") && !TextUtils.isEmpty(properties.getString("$element_type"))) {
+                        appClickEventModel.setElementType(properties.getString("$element_type"));
                     }
 
-                    if (jsonObject.has("$element_id") && !TextUtils.isEmpty("$element_id")) {
-                        appClickEventModel.setElementId(jsonObject.getString("$element_id"));
+                    if (properties.has("$element_id") && !TextUtils.isEmpty(properties.getString("$element_id"))) {
+                        appClickEventModel.setElementId(properties.getString("$element_id"));
                     }
 
                     StatisticesModel statisticesModel = new StatisticesModel();
                     statisticesModel.setStatisticesType(ML_STATISTICS_INSERT_APP_CLICK);
                     statisticesModel.setAppClickEventModel(appClickEventModel);
-                    Message message =  Message.obtain();
+                    Message message = Message.obtain();
                     Bundle bundle = new Bundle();
-                    bundle.putParcelable(ML_STATISTICS_STATISTICES_MODEL,statisticesModel);
+                    bundle.putString(ML_STATISTICS_STATISTICES_JSON_MODEL, gson.toJson(statisticesModel));
                     message.setData(bundle);
                     //使用send方法发送
                     message.replyTo = clientMessenger;
@@ -153,7 +136,17 @@ public class SensorsDataAPI {
                 }
             }
 
-
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("event", eventName);
+            jsonObject.put("device_id", mDeviceId);
+            JSONObject sendProperties = new JSONObject(mDeviceInfo);
+            if (properties != null) {
+                SensorsDataPrivate.mergeJSONObject(properties, sendProperties);
+            }
+            jsonObject.put("properties", sendProperties);
+            if (onSensorsDataAPITrackClickListener != null) {
+                onSensorsDataAPITrackClickListener.onSensorsDataAPITrackClick(jsonObject);
+            }
             Log.i(TAG, SensorsDataPrivate.formatJson(jsonObject.toString()));
         } catch (Exception e) {
             e.printStackTrace();
@@ -167,10 +160,23 @@ public class SensorsDataAPI {
             serviceMessenger = new Messenger(service);
         }
 
+        //服务端崩溃或被杀死的时候被调用
         @Override
         public void onServiceDisconnected(ComponentName name) {
             serviceMessenger = null;
-            bindService(application);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(1 * 1000);
+                        if (application!=null){
+                            bindService(application); //1秒后再次创建service
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
         }
     };
 

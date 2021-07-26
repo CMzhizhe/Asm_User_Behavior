@@ -26,7 +26,7 @@ public class SensorsAnalyticsTransform extends Transform{
             "  ░     ░░▒░ ░ ░   ░  ▒   ░ ░▒ ▒░\n" +
             "  ░ ░    ░░░ ░ ░ ░        ░ ░░ ░\n" +
             "           ░     ░ ░      ░  ░\n" +
-            "                                                                          --------WJ \n"
+            "                                                                          --------GXX \n"
     private static Project project
     private SensorsAnalyticsExtension sensorsAnalyticsExtension;
     public SensorsAnalyticsTransform(Project project,SensorsAnalyticsExtension sensorsAnalyticsExtension) {
