@@ -6,11 +6,15 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
-
+/**
+ * @date 创建时间:2021/7/26 0026
+ * @auther gaoxiaoxiong
+ * @Descriptiion  https://www.bbsmax.com/A/rV574oyadP/
+ **/
 class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbehaviordata.db", null, 1) {
 
-    companion object{
-       const  val TABLE_ML_EVENT_TABLE = "mlEventTable"//事件表
+    companion object {
+        const val TABLE_ML_EVENT_TABLE = "mlEventTable"//事件表
         const val TABLE_ML_PAGE_TABLE = "mlPageTable"//页面表
     }
 
@@ -64,9 +68,9 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
      * @return void
      * @author lihy
      */
-    fun execSQL(sql: String?, bindArgs: Array<Any?>?) {
+    fun execSQL(sql: String, bindArgs: ArrayList<Any>) {
         val database: SQLiteDatabase = getWritableDatabase()
-        database.execSQL(sql, bindArgs)
+        database.execSQL(sql, bindArgs.toArray())
     }
 
 
@@ -80,9 +84,9 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
      * @return Cursor
      * @author lihy
      */
-    fun rawQuery(sql: String?, bindArgs: Array<String?>?): Cursor? {
+    fun rawQuery(sql: String, bindArgs: ArrayList<String>): Cursor? {
         val database: SQLiteDatabase = getWritableDatabase()
-        return database.rawQuery(sql, bindArgs)
+        return database.rawQuery(sql, bindArgs.toTypedArray())
     }
 
     /**
@@ -126,9 +130,9 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
      * @return void
      * @author lihy
      */
-    fun delete(table: String?, whereClause: String?, whereArgs: Array<String?>?) {
+    fun delete(table: String, whereClause: String, whereArgs: ArrayList<String>) {
         val database: SQLiteDatabase = getWritableDatabase()
-        database.delete(table, whereClause, whereArgs)
+        database.delete(table, whereClause, whereArgs.toTypedArray())
     }
 
     /**

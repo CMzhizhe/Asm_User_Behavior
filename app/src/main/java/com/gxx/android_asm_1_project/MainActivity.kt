@@ -8,8 +8,15 @@ import android.view.View
 import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.gxx.collectionuserbehaviorlibrary.sensors.SensorsDataAPI
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackAllClickListener {
+    private val simpleCreateTimeFormat = SimpleDateFormat("yyyy-MM-dd")
+    var yyyyMMdd = simpleCreateTimeFormat.format(Date())
+    var yyyyMMddDate = simpleCreateTimeFormat.parse(yyyyMMdd)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -28,6 +35,17 @@ class MainActivity : AppCompatActivity() {
         })
         val dialog = dialogBuilder.create();
         dialog.show()
+
+
+
+
+        SensorsDataAPI.getInstance().setOnSensorsDataAPITrackAllClickListener(this)
+        val btHistory = findViewById<Button>(R.id.bt_main_gethistory);
+        btHistory.setOnClickListener(object : View.OnClickListener {
+            override fun onClick(v: View?) {
+                SensorsDataAPI.getInstance().getHistoryClickData(yyyyMMddDate.time,false);
+            }
+        })
     }
 
 
@@ -44,6 +62,10 @@ class MainActivity : AppCompatActivity() {
                 Log.e("MainActivity", "普通")
             }
         })
+    }
+
+    override fun onSensorsDataAPITrackAllClick(jsonObject: JSONObject) {
+         Log.e("MainActivity",jsonObject?.toString())
     }
 
 

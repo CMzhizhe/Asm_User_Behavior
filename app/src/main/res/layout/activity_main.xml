@@ -19,14 +19,19 @@
             android:text="普通 setOnClickListener"
             android:textAllCaps="false" />
 
-
-
         <Button
             android:id="@+id/bt_main_test_base_recycler_adapter"
             android:layout_width="match_parent"
             android:layout_height="44dp"
             android:text="测试base_recycler_adapter_click"
             android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/bt_main_gethistory"
+            android:text="获取历史记录的统计"
+            android:textColor="@color/white"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"/>
     </LinearLayout>
 
 </ScrollView>
