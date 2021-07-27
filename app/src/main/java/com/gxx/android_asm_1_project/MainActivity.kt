@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.gxx.collectionuserbehaviorlibrary.sensors.SensorsDataAPI
@@ -13,10 +14,12 @@ import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackAllClickListener {
+class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackAllClickListener, SensorsDataAPI.OnSensorsDataUserUniCodeListener {
     private val simpleCreateTimeFormat = SimpleDateFormat("yyyy-MM-dd")
     var yyyyMMdd = simpleCreateTimeFormat.format(Date())
     var yyyyMMddDate = simpleCreateTimeFormat.parse(yyyyMMdd)
+
+    var tvLog:TextView? = null;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -40,12 +43,24 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
 
 
         SensorsDataAPI.getInstance().setOnSensorsDataAPITrackAllClickListener(this)
+        SensorsDataAPI.getInstance().setOnSensorsDataUserUniCodeListener(this)
+
         val btHistory = findViewById<Button>(R.id.bt_main_gethistory);
         btHistory.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
-                SensorsDataAPI.getInstance().getHistoryClickData(yyyyMMddDate.time,false);
+                SensorsDataAPI.getInstance().getHistoryAppClickData(yyyyMMddDate.time,true);
             }
         })
+
+        //某个历史时期的日期
+        val tvTodayLog = findViewById<TextView>(R.id.bt_main_today);
+        tvTodayLog.setOnClickListener(object :View.OnClickListener{
+            override fun onClick(v: View?) {
+                SensorsDataAPI.getInstance().getHistoryAppClickDataByFileName("1627315200000.txt")
+            }
+        })
+
+        tvLog = findViewById<TextView>(R.id.tv_main_log);
     }
 
 
@@ -66,6 +81,11 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
 
     override fun onSensorsDataAPITrackAllClick(jsonObject: JSONObject) {
          Log.e("MainActivity",jsonObject?.toString())
+        tvLog?.setText(jsonObject?.toString())
+    }
+
+    override fun onUserUniCode(): String {
+         return "zhangsan_unicode"
     }
 
 

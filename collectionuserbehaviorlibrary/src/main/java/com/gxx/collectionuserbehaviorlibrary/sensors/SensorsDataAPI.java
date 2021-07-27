@@ -18,12 +18,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.gxx.collectionuserbehaviorlibrary.model.AppClickEventModel;
 import com.gxx.collectionuserbehaviorlibrary.model.StatisticesModel;
 import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService;
+import com.gxx.collectionuserbehaviorlibrary.utils.FileUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -60,7 +58,7 @@ public class SensorsDataAPI {
     public static final String SENSORS_DATA_API_SERVICE_MESSAGE = "serviceMessage";
     public static final String SDK_VERSION = "1.0.0";
     public static final int ML_STATISTICS_MSG_WHAT_FROM_SERVICE_10 = 10;//从服务器来
-    public static final int ML_STATISTICS_MSG_WHAT_20 = 20;
+    public static final int ML_STATISTICS_MSG_WHAT_20 = 20;//表示事件
 
     private Map<String, Object> mDeviceInfo = null;
     private String mDeviceId = "";
@@ -257,17 +255,22 @@ public class SensorsDataAPI {
             if (msg.what == ML_STATISTICS_MSG_WHAT_FROM_SERVICE_10){//从服务器传递来消息
                 //解析文件，将最终结果转为一个json
                 String filePath = msg.getData().getString(ML_STATISTICS_APP_CLICK_FILE_PATH);
-                sensorsDataAPIWeakReference.get().singleThreadExecutor.execute(new ParseLocalCacheFile(sensorsDataAPIWeakReference.get(),filePath));
+                sensorsDataAPIWeakReference.get().singleThreadExecutor.execute(new ParseLocalCacheFileRunnable(sensorsDataAPIWeakReference.get(),filePath));
             }else if (msg.what == ML_STATISTICS_MSG_WHAT_20){//通知结果
-                String jsonArrayString = msg.obj.toString();
                 try {
-                    JSONArray jsonArray = new JSONArray(jsonArrayString); //将String转换成JsonArray对象
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("event", "$AppClick");
-                    if (!TextUtils.isEmpty(sensorsDataAPIWeakReference.get().mDeviceId)) {
-                        jsonObject.put("device_id", sensorsDataAPIWeakReference.get().mDeviceId);
+                    if (sensorsDataAPIWeakReference.get().mDeviceInfo!=null){
+                        JSONObject deviceInfoJsonObject = new JSONObject(sensorsDataAPIWeakReference.get().mDeviceInfo);
+                        jsonObject.put("deviceInfo",deviceInfoJsonObject);
                     }
-                    jsonObject.put("list",jsonArray);
+                    if (msg.obj!=null){
+                        String jsonArrayString = msg.obj.toString();
+                        if (!TextUtils.isEmpty(jsonArrayString)){
+                            JSONArray jsonArray = new JSONArray(jsonArrayString); //将String转换成JsonArray对象
+                            jsonObject.put("list",jsonArray);
+                        }
+                    }
                     if (sensorsDataAPIWeakReference!=null &&  sensorsDataAPIWeakReference.get()!=null && sensorsDataAPIWeakReference.get().onSensorsDataAPITrackAllClickListener!=null){
                         sensorsDataAPIWeakReference.get().onSensorsDataAPITrackAllClickListener.onSensorsDataAPITrackAllClick(jsonObject);
                     }
@@ -296,32 +299,32 @@ public class SensorsDataAPI {
      * @Descriptiion 解析本地缓存文件
      * https://www.jianshu.com/p/fdf6178d1a66
      **/
-    private static class ParseLocalCacheFile implements Runnable{
+    private static class ParseLocalCacheFileRunnable implements Runnable{
         private String filePath;
         private WeakReference<SensorsDataAPI> sensorsDataAPIWeakReference = null;
 
-        public ParseLocalCacheFile(SensorsDataAPI sensorsDataAPI,String filePath){
+        public ParseLocalCacheFileRunnable(SensorsDataAPI sensorsDataAPI,String filePath){
             this.filePath = filePath;
             sensorsDataAPIWeakReference = new WeakReference<SensorsDataAPI>(sensorsDataAPI);
         }
         @Override
         public void run() {
-            if (sensorsDataAPIWeakReference!=null && sensorsDataAPIWeakReference.get()!=null && !TextUtils.isEmpty(filePath)){
+            if (sensorsDataAPIWeakReference!=null && sensorsDataAPIWeakReference.get()!=null && !TextUtils.isEmpty(filePath) && sensorsDataAPIWeakReference.get().messageHandler!=null){
                 File file = new File(filePath);
                 if (file.exists()){
                     try {
                         String content = "";
-                        InputStream instream = new FileInputStream(file);
-                        if (instream != null) {
-                            InputStreamReader inputreader = new InputStreamReader(instream, "UTF-8");
-                            BufferedReader buffreader = new BufferedReader(inputreader);
-                            String line = "";
-                            //分行读取
-                            while ((line = buffreader.readLine()) != null) {
-                                content += line;
-                            }
-                            instream.close();//关闭输入流
+                        InputStream instream  = new FileInputStream(file);
+                        InputStreamReader inputreader = new InputStreamReader(instream, "UTF-8");
+                        BufferedReader buffreader = new BufferedReader(inputreader);
+                        String line = "";
+                        //分行读取
+                        while ((line = buffreader.readLine()) != null) {
+                            content += line;
                         }
+                        inputreader.close();
+                        buffreader.close();
+                        instream.close();
                         if (sensorsDataAPIWeakReference.get().messageHandler!=null){
                             Message message =  Message.obtain();
                             message.what = ML_STATISTICS_MSG_WHAT_20;
@@ -345,7 +348,7 @@ public class SensorsDataAPI {
      * @auther gaoxiaoxiong
      * @Descriptiion 获取历史的点击 < dayTime 都获取
      **/
-    public void getHistoryClickData(long dayTime, boolean isNeedDeleteHistory) {
+    public void getHistoryAppClickData(long dayTime, boolean isNeedDeleteHistory) {
         StatisticesModel statisticesMode = new StatisticesModel();
         statisticesMode.setDayTime(dayTime);
         statisticesMode.setStatisticesType(ML_STATISTICS_SELECT_APP_CLICK);
@@ -364,6 +367,21 @@ public class SensorsDataAPI {
             }
         }
     }
+
+    /**
+     * @date 创建时间:2021/7/27 0027
+     * @auther gaoxiaoxiong
+     * @Descriptiion 通过文件名称获取历史记录信息
+     * @param fileName 文件名称，必须为  yyyy-MM-dd.txt的格式时间，否者会直接异常
+     **/
+    public void getHistoryAppClickDataByFileName(String fileName){
+        FileUtils fileUtils = new FileUtils();
+        File file = new File(fileUtils.getSandboxPublickDiskCacheDir(application) + "/" +fileName);
+        if (singleThreadExecutor!=null && file.exists()){
+            singleThreadExecutor.execute(new ParseLocalCacheFileRunnable(this,file.getAbsolutePath()));
+        }
+    }
+
 
     /**
      * @date 创建时间:2021/7/26 0026

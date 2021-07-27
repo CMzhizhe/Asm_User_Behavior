@@ -162,7 +162,7 @@ class MlStatisticsService : Service() {
                 }
                 val cursor =
                     mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.rawQuery(
-                        "select * from " + TABLE_ML_EVENT_TABLE + " t where t.createTime <= ? and t.eventName = ? ",
+                        "select * from " + TABLE_ML_EVENT_TABLE + " t where t.createTime < ? and t.eventName = ? ",
                         anyArray
                     )
                 cursor?.let {
