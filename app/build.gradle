@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-    id 'com.sensorsdata.android'
+    id 'com.gxx.android'
 }
 
 android {
@@ -40,7 +40,7 @@ android {
 
 sensorsAnalytics {
     disableAppClick = false
-    excludeString = "TestRecyclerAdapterActivity,MainActivity"
+    excludeString = ""//包路径名 比如 com.gxx.collectionuserbehaviorlibrary
 }
 
 

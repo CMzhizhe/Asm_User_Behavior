@@ -67,6 +67,7 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
     override fun onSensorsDataAPITrackAllClick(jsonObject: JSONObject) {
          Log.e("MainActivity",jsonObject?.toString())
         tvLog?.setText(jsonObject?.toString())
+        //todo 可以拿到结果，自行处理不需要的activity
     }
 
     override fun onUserUniCode(): String {

@@ -1,5 +1,4 @@
 include ':plugin'
 include ':app'
-//include ':sdk'
 include ':collectionuserbehaviorlibrary'
 rootProject.name = "Android_ASM_1_project"
