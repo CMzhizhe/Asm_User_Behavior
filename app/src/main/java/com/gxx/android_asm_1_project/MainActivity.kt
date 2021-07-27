@@ -49,19 +49,27 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
         val btHistory = findViewById<Button>(R.id.bt_main_gethistory);
         btHistory.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
-                SensorsDataAPI.getInstance().getHistoryAppClickData(yyyyMMddDate.time,true);
+                SensorsDataAPI.getInstance().getHistoryAppClickData(yyyyMMddDate.time,false,true);
             }
         })
 
         //某个历史时期的日期
-        val tvTodayLog = findViewById<TextView>(R.id.bt_main_today);
-        tvTodayLog.setOnClickListener(object :View.OnClickListener{
+        val tvFileLog = findViewById<TextView>(R.id.bt_main_file);
+        tvFileLog.setOnClickListener(object :View.OnClickListener{
             override fun onClick(v: View?) {
                 SensorsDataAPI.getInstance().getHistoryAppClickDataByFileName("1627315200000.txt")
             }
         })
 
         tvLog = findViewById<TextView>(R.id.tv_main_log);
+
+        val btSetTagProperties = findViewById<Button>(R.id.bt_main_setTag_properties);
+        btSetTagProperties.setTag(R.id.sensors_analytics_tag_view_properties,"我是view_properties")
+        btSetTagProperties.setOnClickListener(object :View.OnClickListener{
+            override fun onClick(v: View?) {
+                SensorsDataAPI.getInstance().getHistoryAppClickData(yyyyMMddDate.time,true,true);
+            }
+        })
     }
 
     override fun onSensorsDataAPITrackAllClick(jsonObject: JSONObject) {

@@ -37,8 +37,11 @@ class MlStatisticsService : Service() {
         const val ML_STATISTICS_INSERT_APP_CLICK = "InsertAppClick";//点击行为
         const val ML_STATISTICS_APP_PAGE = "AppPage";//页面统计
         const val ML_STATISTICS_SELECT_APP_CLICK = "selectAppClick";//查询点击的行为
-
+        const val ML_STATISTICS_SELECT_APP_CLICK_BY_TIME = "selectAppClickByTime";//查询某个时间点的时间
         const val ML_STATISTICS_APP_CLICK_FILE_PATH = "appClickFilePath"//文件路径
+
+        const val ML_STATISTICS_STATUS_10 = "10";
+        const val ML_STATISTICS_STATUS_20 = "20";
     }
 
 
@@ -50,11 +53,12 @@ class MlStatisticsService : Service() {
     class MessengerHandler : Handler {
         val gson = Gson();
         var mlStatisticsServiceWeakReference: WeakReference<MlStatisticsService>? = null;
-        var replyToClient:Message? = null;
+        var replyToClient: Message? = null;
+
         constructor(mlStatisticsService: MlStatisticsService, looper: Looper) : super(looper) {
             if (mlStatisticsServiceWeakReference == null) {
                 mlStatisticsServiceWeakReference = WeakReference<MlStatisticsService>(
-                    mlStatisticsService
+                        mlStatisticsService
                 );
             }
         }
@@ -62,32 +66,32 @@ class MlStatisticsService : Service() {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
             if (msg.what == ML_STATISTICS_MSG_WHAT_FROM_CLIENT_100) {
-                if (replyToClient == null){
+                if (replyToClient == null) {
                     replyToClient = Message.obtain(msg);
                 }
                 val bundle = msg.data;
                 val statisticesModelJsonString = bundle.getString(
-                    ML_STATISTICS_STATISTICES_JSON_MODEL,
-                    ""
+                        ML_STATISTICS_STATISTICES_JSON_MODEL,
+                        ""
                 );
 
                 if (mlStatisticsServiceWeakReference == null || mlStatisticsServiceWeakReference!!.get() == null || TextUtils.isEmpty(
-                        statisticesModelJsonString
-                    )
+                                statisticesModelJsonString
+                        )
                 ) {
                     return
                 }
 
                 if (mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper == null) {
                     mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper =
-                        MlSqLiteOpenHelper(
-                            mlStatisticsServiceWeakReference!!.get()!!.applicationContext
-                        );
+                            MlSqLiteOpenHelper(
+                                    mlStatisticsServiceWeakReference!!.get()!!.applicationContext
+                            );
                 }
 
                 val statisticesModel = gson.fromJson<StatisticesModel>(
-                    statisticesModelJsonString,
-                    StatisticesModel::class.java
+                        statisticesModelJsonString,
+                        StatisticesModel::class.java
                 )
                 //存储数据到本地数据库
                 if (statisticesModel.statisticesType.equals(ML_STATISTICS_INSERT_APP_CLICK)) {
@@ -107,21 +111,21 @@ class MlStatisticsService : Service() {
                         contentValues.put("createTime", appClickEventModel.createTime)
                         contentValues.put("extrans", appClickEventModel.extrans ?: "")
                         mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper!!.insert(
-                            TABLE_ML_EVENT_TABLE,
-                            contentValues
+                                TABLE_ML_EVENT_TABLE,
+                                contentValues
                         )
                     }
                 } else if (statisticesModel.statisticesType.equals(ML_STATISTICS_SELECT_APP_CLICK)) {//开启线程去查询，然后将结果存储到本地 cache目录，通知前端自行去获取 && 解析数据出来
                     mlStatisticsServiceWeakReference!!.get()!!.singleThreadExecutor.execute(
-                        SelectEnventTableRunnable(
-                            mlStatisticsServiceWeakReference!!.get()!!,
-                            statisticesModel.dayTime,
-                            statisticesModel.isNeedDeleteHistory
-                        )
+                            SelectEnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, "\$AppClick", ML_STATISTICS_STATUS_10, statisticesModel.isNeedDeleteHistory)
+                    )
+                } else if (statisticesModel.statisticesType.equals(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)){
+                    mlStatisticsServiceWeakReference!!.get()!!.singleThreadExecutor.execute(
+                            SelectEnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, "\$AppClick", ML_STATISTICS_STATUS_20, statisticesModel.isNeedDeleteHistory)
                     )
                 }
             } else if (msg.what == ML_STATISTICS_MSG_WHAT_101) {//文件已经存储到本地了，需要通知前端
-                if (replyToClient == null){
+                if (replyToClient == null) {
                     return
                 }
                 val message = Message.obtain();
@@ -144,10 +148,20 @@ class MlStatisticsService : Service() {
         private val anyArray = ArrayList<String>();
         private val fileUtils = FileUtils();
         private var isNeedDelete = true;
+        private var status = ML_STATISTICS_STATUS_10
 
-        constructor(service: MlStatisticsService, dayTime: Long, isNeedDelete: Boolean) : super() {
+        /**
+         * @date 创建时间:2021/7/27 0027
+         * @auther gaoxiaoxiong
+         * @Descriptiion
+         * @param dayTime 查询的时间
+         * @param eventName 事件名称
+         * @param status 10 dayTime < createTime  20 dayTime == createTime
+         **/
+        constructor(service: MlStatisticsService, dayTime: Long, eventName: String, status: String, isNeedDelete: Boolean) : super() {
             anyArray.add(dayTime.toString())
-            anyArray.add("\$AppClick")
+            anyArray.add(eventName)
+            this.status = status;
             this.isNeedDelete = isNeedDelete;
             mlStatisticsServiceWeakRefrence = WeakReference<MlStatisticsService>(service);
         }
@@ -156,17 +170,23 @@ class MlStatisticsService : Service() {
             if (mlStatisticsServiceWeakRefrence != null && mlStatisticsServiceWeakRefrence!!.get() != null) {
                 if (mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper == null) {
                     mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper =
-                        MlSqLiteOpenHelper(
-                            mlStatisticsServiceWeakRefrence!!.get()!!.applicationContext
-                        );
+                            MlSqLiteOpenHelper(
+                                    mlStatisticsServiceWeakRefrence!!.get()!!.applicationContext
+                            );
+                }
+                var sql = ""
+                if (status.equals(ML_STATISTICS_STATUS_10)  ){
+                    sql = "select * from " + TABLE_ML_EVENT_TABLE + " t where t.createTime < ? and t.eventName = ? "
+                }else if (status.equals(ML_STATISTICS_STATUS_20)){
+                    sql = "select * from " + TABLE_ML_EVENT_TABLE + " t where t.createTime = ? and t.eventName = ? "
                 }
                 val cursor =
-                    mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.rawQuery(
-                        "select * from " + TABLE_ML_EVENT_TABLE + " t where t.createTime < ? and t.eventName = ? ",
-                        anyArray
-                    )
+                        mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.rawQuery(
+                                sql,
+                                anyArray
+                        )
                 cursor?.let {
-                    if (!it.moveToFirst()){//没有任何一条数据
+                    if (!it.moveToFirst()) {//没有任何一条数据
                         return
                     }
                     val list = mutableListOf<AppClickEventModel>()
@@ -205,7 +225,7 @@ class MlStatisticsService : Service() {
                     }
 
                     val file =
-                        File(fileUtils.getSandboxPublickDiskCacheDir(mlStatisticsServiceWeakRefrence!!.get()!!.applicationContext) + "/" + anyArray[0] + ".txt")
+                            File(fileUtils.getSandboxPublickDiskCacheDir(mlStatisticsServiceWeakRefrence!!.get()!!.applicationContext) + "/" + anyArray[0] + ".txt")
                     if (file.exists()) {
                         file.delete();
                     }
@@ -218,10 +238,16 @@ class MlStatisticsService : Service() {
 
                     //进行删除历史记录操作
                     if (isNeedDelete) {
+                        var where = ""
+                        if (status.equals(ML_STATISTICS_STATUS_10)){
+                            where = "createTime < ? and eventName = ? "
+                        }else if (status.equals(ML_STATISTICS_STATUS_20)){
+                            where = "createTime = ? and eventName = ? "
+                        }
                         mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.delete(
-                            TABLE_ML_EVENT_TABLE,
-                            "createTime < ? and eventName = ? ",
-                            anyArray
+                                TABLE_ML_EVENT_TABLE,
+                                where,
+                                anyArray
                         )
                     }
 
@@ -245,7 +271,7 @@ class MlStatisticsService : Service() {
             mlSqLiteOpenHelper!!.clear()
         }
 
-        if (singleThreadExecutor!=null){
+        if (singleThreadExecutor != null) {
             singleThreadExecutor.shutdown()
         }
     }

@@ -34,11 +34,22 @@
             android:layout_height="44dp"/>
 
         <Button
-            android:id="@+id/bt_main_today"
-            android:text="获取今天记录的统计"
+            android:id="@+id/bt_main_file"
+            android:text="获取某个时间点的文件里面的信息"
             android:textColor="@color/white"
             android:layout_width="match_parent"
             android:layout_height="44dp"/>
+
+
+        <Button
+            android:id="@+id/bt_main_setTag_properties"
+            android:text="我是button Tag到properties里面"
+            android:textColor="@color/white"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"/>
+
+
+
 
         <TextView
             android:id="@+id/tv_main_log"

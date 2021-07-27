@@ -22,6 +22,8 @@ import android.widget.ToggleButton;
 import androidx.annotation.Keep;
 import androidx.appcompat.widget.SwitchCompat;
 
+import com.gxx.collectionuserbehaviorlibrary.R;
+
 import org.json.JSONObject;
 
 import java.util.Locale;
@@ -393,7 +395,9 @@ public class SensorsDataAutoTrackHelper {
             jsonObject.put("$element_type", SensorsDataPrivate.getElementType(view));
             jsonObject.put("$element_id", SensorsDataPrivate.getViewId(view));
             jsonObject.put("$element_content", SensorsDataPrivate.getElementContent(view));
-
+            if (view.getTag(R.id.sensors_analytics_tag_view_properties)!=null){
+                jsonObject.put("$viewTag",view.getTag(R.id.sensors_analytics_tag_view_properties));
+            }
             Activity activity = SensorsDataPrivate.getActivityFromView(view);
             if (activity != null) {
                 jsonObject.put("$activity", activity.getClass().getCanonicalName());
