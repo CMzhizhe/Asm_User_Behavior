@@ -41,8 +41,9 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
 
 
 
-
+        //设置获取时间点的结果回调
         SensorsDataAPI.getInstance().setOnSensorsDataAPITrackAllClickListener(this)
+        //设置用户唯一ID
         SensorsDataAPI.getInstance().setOnSensorsDataUserUniCodeListener(this)
 
         val btHistory = findViewById<Button>(R.id.bt_main_gethistory);
@@ -61,22 +62,6 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
         })
 
         tvLog = findViewById<TextView>(R.id.tv_main_log);
-    }
-
-
-    /**
-     * 普通 setOnClickListener
-     */
-    private fun initButton() {
-        val button: Button = findViewById(R.id.button)
-        button.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View) {
-                //插入代码(for())
-
-                //统计
-                Log.e("MainActivity", "普通")
-            }
-        })
     }
 
     override fun onSensorsDataAPITrackAllClick(jsonObject: JSONObject) {
