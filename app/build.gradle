@@ -40,7 +40,8 @@ android {
 
 sensorsAnalytics {
     disableAppClick = false
-    excludeString = ""//包路径名 比如 com.gxx.collectionuserbehaviorlibrary
+    excludeString = "android/support,com/gxx/collectionuserbehaviorlibrary"//不想扫描的包路径名 比如 com.gxx.collectionuserbehaviorlibrary
+    //excludeClassNameString = ""//不想处理的类型路径
 }
 
 
