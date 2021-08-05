@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.gxx.collectionuserbehaviorlibrary.costtime.CostTime
 import com.gxx.collectionuserbehaviorlibrary.sensors.SensorsDataAPI
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -70,7 +71,20 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
                 SensorsDataAPI.getInstance().getHistoryAppClickData(yyyyMMddDate.time,true,true);
             }
         })
+
+        readNetWork();
     }
+
+    @CostTime
+    public fun readNetWork(){
+        Thread(object :Runnable{
+            override fun run() {
+                 Thread.sleep(5 * 1000)
+            }
+        }).start()
+    }
+
+
 
     override fun onSensorsDataAPITrackAllClick(jsonObject: JSONObject) {
          Log.e("MainActivity",jsonObject?.toString())

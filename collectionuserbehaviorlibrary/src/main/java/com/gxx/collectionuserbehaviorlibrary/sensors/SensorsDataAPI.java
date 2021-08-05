@@ -63,9 +63,11 @@ public class SensorsDataAPI {
 
     private Map<String, Object> mDeviceInfo = null;
     private String mDeviceId = "";
+
     private OnSensorsDataEveryTimeAPITrackClickListener onSensorsDataAPITrackClickListener;
     private OnSensorsDataUserUniCodeListener onSensorsDataUserUniCodeListener;//用户唯一userUnicode
     private OnSensorsDataAPITrackAllClickListener onSensorsDataAPITrackAllClickListener;//所有的点击统计事件
+
     private MessageHandler messageHandler = null;
     private Messenger clientMessenger = null;//客户端
     //服务器通信使用
@@ -89,25 +91,37 @@ public class SensorsDataAPI {
         this.onSensorsDataAPITrackAllClickListener = onSensorsDataAPITrackAllClickListener;
     }
 
-    @SuppressWarnings("UnusedReturnValue")
-    public static SensorsDataAPI init() {
-        if (INSTANCE == null) {
-            synchronized (SensorsDataAPI.class) {
-                if (null == INSTANCE) {
+    public static class Builder{
+        private Application application;
+        private Boolean isDebug;
+        public Builder  setApplication(Application application) {
+            this.application = application;
+            return this;
+        }
+
+        public Builder  setDebug(Boolean debug) {
+            isDebug = debug;
+            return this;
+        }
+
+        public SensorsDataAPI build(){
+            return new SensorsDataAPI(this);
+        }
+    }
+
+    public SensorsDataAPI(){
+        super();
+    }
+
+    private SensorsDataAPI(Builder builder){
+        if (INSTANCE == null){
+            synchronized (SensorsDataAPI.class){
+                if (INSTANCE == null){
                     INSTANCE = new SensorsDataAPI();
+                    INSTANCE.init(builder.application,builder.isDebug);
                 }
-                return INSTANCE;
             }
         }
-        return INSTANCE;
-    }
-
-    public static SensorsDataAPI getInstance() {
-        return INSTANCE;
-    }
-
-    private SensorsDataAPI() {
-        super();
     }
 
     /**
@@ -116,7 +130,7 @@ public class SensorsDataAPI {
      * @auther gaoxiaoxiong
      * @Descriptiion
      **/
-    public void SensorsDataAPI(Application application, boolean isDebug) {
+    private void init(Application application, boolean isDebug) {
         this.application = application;
         this.isDebug = isDebug;
         messageHandler = new MessageHandler(this, application.getMainLooper());
@@ -427,6 +441,11 @@ public class SensorsDataAPI {
         if (application != null && serviceConnection != null) {
             application.unbindService(serviceConnection);
         }
+    }
+
+
+    public static SensorsDataAPI getInstance() {
+        return INSTANCE;
     }
 
 

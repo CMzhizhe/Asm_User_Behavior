@@ -16,6 +16,7 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
     companion object {
         const val TABLE_ML_EVENT_TABLE = "mlEventTable"//事件表
         const val TABLE_ML_PAGE_TABLE = "mlPageTable"//页面表
+        const val TABLE_ML_TIME_TABLE = "mlTimeTable"//时间表
     }
 
 
@@ -49,9 +50,24 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
             "extrans varchar(255)" + //额外参数，可以为空
             " )";
 
+    private val CREATE_TIME_TABLE = "create table if not exists " + TABLE_ML_TIME_TABLE + " ( " +
+            "id integer primary key autoincrement, " +
+            "eventName varchar(100)," + //事件名称，不可为空
+            "deviceId varchar(100)," + //手机deviceID
+            "userUniCode varchar(100)," +//用户唯一ID
+            "className varchar(100)," + //类名称
+            "methodName varchar(100)," +//方法名称
+            "createTime long," +//创建时间   yyyy-MM-dd
+            "SysTemStartTime long," +//微妙开始值
+            "SysTemMiddleTime long,"+//微妙中间时间，可以用于存储其它值
+            "SysTemEndTime long," +//微妙结束值
+            "extrans varchar(255)" + //额外参数，可以为空
+            " )";
+
     override fun onCreate(db: SQLiteDatabase?) {
         db?.execSQL(CREATE_EVENT_TABLE);
         db?.execSQL(CREATE_PAGE_TABLE);
+        db?.execSQL(CREATE_TIME_TABLE);
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {

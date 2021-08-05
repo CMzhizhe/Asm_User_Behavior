@@ -1,11 +1,6 @@
 package com.sensorsdata.analytics.android.plugin
 
-import org.objectweb.asm.AnnotationVisitor
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.Handle
-import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.Type
+import org.objectweb.asm.*
 
 class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
     private final
@@ -236,7 +231,6 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
                 if (s == 'Lcom/gxx/collectionuserbehaviorlibrary/sensors/SensorsDataTrackViewOnClick;') {
                     isSensorsDataTrackViewOnClickAnnotation = true
                 }
-
                 return super.visitAnnotation(s, b)
             }
         }

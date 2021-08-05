@@ -107,7 +107,7 @@ public class SensorsAnalyticsTransform extends Transform{
                                 if (!sensorsAnalyticsExtension.disableAppClick){
                                     modified = sensorsAnalyticsClassModifier.modifyClassFile(dir,classFile,transformInvocation.getContext().getTemporaryDir())
                                 }
-
+                                modified = sensorsAnalyticsClassModifier.modifyClassFile2(dir,classFile,transformInvocation.getContext().getTemporaryDir())
                                 if (modified != null) {
                                     /**key 为包名 + 类名，如：/cn/sensorsdata/autotrack/android/app/MainActivity.class*/
                                     String ke = classFile.absolutePath.replace(dir.absolutePath, "")

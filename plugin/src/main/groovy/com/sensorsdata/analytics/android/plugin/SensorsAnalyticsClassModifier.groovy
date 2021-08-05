@@ -89,6 +89,14 @@ public class SensorsAnalyticsClassModifier {
         return classWriter.toByteArray()
     }
 
+    private static byte[] modifyClassV2(byte[] srcClass) throws IOException {
+        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS)
+        ClassVisitor classVisitor = new SensorsAnalyticsCostTimeClassVisitor(classWriter)
+        ClassReader cr = new ClassReader(srcClass)
+        cr.accept(classVisitor, ClassReader.SKIP_FRAMES)
+        return classWriter.toByteArray()
+    }
+
     protected static boolean isShouldModify(String className) {
         Iterator<String> iterator = exclude.iterator()
         while (iterator.hasNext()) {
@@ -115,6 +123,27 @@ public class SensorsAnalyticsClassModifier {
             String className = path2ClassName(classFile.absolutePath.replace(dir.absolutePath + File.separator, ""))
             byte[] sourceClassBytes = IOUtils.toByteArray(new FileInputStream(classFile))
             byte[] modifiedClassBytes = modifyClass(sourceClassBytes)
+            if (modifiedClassBytes) {
+                modified = new File(tempDir, className.replace('.', '') + '.class')
+                if (modified.exists()) {
+                    modified.delete()
+                }
+                modified.createNewFile()
+                new FileOutputStream(modified).write(modifiedClassBytes)
+            }
+        } catch (Exception e) {
+            e.printStackTrace()
+            modified = classFile
+        }
+        return modified
+    }
+
+    static File modifyClassFile2(File dir, File classFile, File tempDir) {
+        File modified = null
+        try {
+            String className = path2ClassName(classFile.absolutePath.replace(dir.absolutePath + File.separator, ""))
+            byte[] sourceClassBytes = IOUtils.toByteArray(new FileInputStream(classFile))
+            byte[] modifiedClassBytes = modifyClassV2(sourceClassBytes)
             if (modifiedClassBytes) {
                 modified = new File(tempDir, className.replace('.', '') + '.class')
                 if (modified.exists()) {

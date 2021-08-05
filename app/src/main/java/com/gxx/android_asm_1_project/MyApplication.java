@@ -23,7 +23,7 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         if (getProcessName(this).endsWith("com.gxx.android_asm_1_project")){
-            SensorsDataAPI.init().SensorsDataAPI(this,true);
+            new SensorsDataAPI.Builder().setApplication(this).setDebug(true).build();
         }
     }
 
