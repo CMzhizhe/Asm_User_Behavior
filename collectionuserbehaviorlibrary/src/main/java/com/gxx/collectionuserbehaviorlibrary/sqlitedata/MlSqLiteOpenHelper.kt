@@ -32,6 +32,7 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
             "elementId varchar(100)," +//事件的id
             "clickTime long," + //事件点击时间 yyyy-MM-dd HH:mm:ss
             "createTime long," +//创建时间  yyyy-MM-dd
+            "isVisit int," + //是否可见 0 不可见  1可见
             "extrans varchar(255)" + //额外参数
             " )"
 
@@ -61,6 +62,7 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
             "SysTemStartTime long," +//微妙开始值
             "SysTemMiddleTime long,"+//微妙中间时间，可以用于存储其它值
             "SysTemEndTime long," +//微妙结束值
+            "isVisit int," + //是否可见 0 不可见  1可见
             "extrans varchar(255)" + //额外参数，可以为空
             " )";
 
