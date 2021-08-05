@@ -72,12 +72,19 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
             }
         })
 
-        readNetWork();
+        //耗时点击
+        val btTime = findViewById<Button>(R.id.timeoutclick);
+        btTime.setOnClickListener(object :View.OnClickListener{
+            override fun onClick(v: View) {
+                readNetWork();
+            }
+        })
     }
 
-    @CostTime
+
     public fun readNetWork(){
         Thread(object :Runnable{
+            @CostTime
             override fun run() {
                  Thread.sleep(5 * 1000)
             }

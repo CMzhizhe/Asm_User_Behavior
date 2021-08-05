@@ -42,24 +42,10 @@ public class SensorsAnalyticsCostTimeClassVisitor extends ClassVisitor implement
 
 
                    methodVisitor.visitLdcInsn(name);
-                   methodVisitor.visitMethodInsn(INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
+                   methodVisitor.visitMethodInsn(INVOKESTATIC, "java/lang/System", "currentTimeMillis", "()J", false);
                    methodVisitor.visitMethodInsn(INVOKESTATIC, "com/gxx/android_asm_1_project/TimeCache", "setStartTime", "(Ljava/lang/String;J)V", false);
 
 
-                   methodVisitor.visitLdcInsn(name);
-                   methodVisitor.visitMethodInsn(INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
-                   methodVisitor.visitMethodInsn(INVOKESTATIC, "com/gxx/android_asm_1_project/TimeCache", "setEndTime", "(Ljava/lang/String;J)V", false);
-
-
-                   methodVisitor.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-                   methodVisitor.visitLdcInsn(name);
-                   methodVisitor.visitMethodInsn(INVOKESTATIC, "com/gxx/android_asm_1_project/TimeCache", "getCostTime", "(Ljava/lang/String;)Ljava/lang/String;", false);
-                   methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
-
-
-                   methodVisitor.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-                   methodVisitor.visitLdcInsn("========end=========");
-                   methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
                }
             }
 
@@ -67,6 +53,20 @@ public class SensorsAnalyticsCostTimeClassVisitor extends ClassVisitor implement
             protected void onMethodExit(int opcode) {
                 if (isCostAnnotation){
                     //结算class
+                    methodVisitor.visitLdcInsn(name);
+                    methodVisitor.visitMethodInsn(INVOKESTATIC, "java/lang/System", "currentTimeMillis", "()J", false);
+                    methodVisitor.visitMethodInsn(INVOKESTATIC, "com/gxx/android_asm_1_project/TimeCache", "setEndTime", "(Ljava/lang/String;J)V", false);
+
+
+                    methodVisitor.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                    methodVisitor.visitLdcInsn(name);
+                    methodVisitor.visitMethodInsn(INVOKESTATIC, "com/gxx/android_asm_1_project/TimeCache", "getCostTime", "(Ljava/lang/String;)Ljava/lang/String;", false);
+                    methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
+
+
+                    methodVisitor.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                    methodVisitor.visitLdcInsn("========end=========");
+                    methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
                 }
             }
 

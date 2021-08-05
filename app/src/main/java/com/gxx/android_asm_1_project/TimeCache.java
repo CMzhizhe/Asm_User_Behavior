@@ -15,7 +15,7 @@ public class TimeCache {
     public static String getCostTime(String methodName) {
         long start = (long) sStartTime.get(methodName);
         long end = (long) sEndTime.get(methodName);
-        return "method: " + methodName + " main " + Long.valueOf(end - start) + " ns";
+        return "method: " + methodName + " main " + Long.valueOf(end - start) + " ms";
     }
 
 }
