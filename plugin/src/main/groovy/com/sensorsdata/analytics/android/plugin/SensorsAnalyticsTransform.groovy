@@ -104,10 +104,15 @@ public class SensorsAnalyticsTransform extends Transform{
                             SensorsAnalyticsClassModifier sensorsAnalyticsClassModifier = new SensorsAnalyticsClassModifier(sensorsAnalyticsExtension.excludeString)
                             if (sensorsAnalyticsClassModifier.isShouldModify(classFile.name)){
                                 File modified = null;
+
                                 if (!sensorsAnalyticsExtension.disableAppClick){
                                     modified = sensorsAnalyticsClassModifier.modifyClassFile(dir,classFile,transformInvocation.getContext().getTemporaryDir())
                                 }
-                                modified = sensorsAnalyticsClassModifier.modifyClassFile2(dir,classFile,transformInvocation.getContext().getTemporaryDir())
+
+                                if (!sensorsAnalyticsExtension.disableCostTime){
+                                    modified = sensorsAnalyticsClassModifier.modifyClassFile2(dir,classFile,transformInvocation.getContext().getTemporaryDir())
+                                }
+
                                 if (modified != null) {
                                     /**key 为包名 + 类名，如：/cn/sensorsdata/autotrack/android/app/MainActivity.class*/
                                     String ke = classFile.absolutePath.replace(dir.absolutePath, "")
@@ -148,6 +153,11 @@ public class SensorsAnalyticsTransform extends Transform{
                 if (!sensorsAnalyticsExtension.disableAppClick) {
                     modifiedJar = sensorsAnalyticsClassModifier.modifyJar(jarInput.file, transformInvocation.getContext().getTemporaryDir(), true)
                 }
+
+                if (!sensorsAnalyticsExtension.disableCostTime) {
+                    modifiedJar = sensorsAnalyticsClassModifier.modifyJar(jarInput.file, transformInvocation.getContext().getTemporaryDir(), true)
+                }
+
                 if (modifiedJar == null) {
                     modifiedJar = jarInput.file
                 }

@@ -6,11 +6,14 @@ import android.content.Intent
 import android.os.*
 import android.text.TextUtils
 import com.google.gson.Gson
+import com.gxx.collectionuserbehaviorlibrary.Constant.Companion.CONSTANT_APP_CLICK
 import com.gxx.collectionuserbehaviorlibrary.model.AppClickEventModel
+import com.gxx.collectionuserbehaviorlibrary.model.CostMethodModel
 import com.gxx.collectionuserbehaviorlibrary.model.StatisticesModel
 import com.gxx.collectionuserbehaviorlibrary.sensors.SensorsDataAPI
 import com.gxx.collectionuserbehaviorlibrary.sqlitedata.MlSqLiteOpenHelper
 import com.gxx.collectionuserbehaviorlibrary.sqlitedata.MlSqLiteOpenHelper.Companion.TABLE_ML_EVENT_TABLE
+import com.gxx.collectionuserbehaviorlibrary.sqlitedata.MlSqLiteOpenHelper.Companion.TABLE_ML_TIME_TABLE
 import com.gxx.collectionuserbehaviorlibrary.utils.FileUtils
 import java.io.File
 import java.io.RandomAccessFile
@@ -35,6 +38,7 @@ class MlStatisticsService : Service() {
         const val ML_STATISTICS_STATISTICES_JSON_MODEL = "StatisticesJsonModel"
 
         const val ML_STATISTICS_INSERT_APP_CLICK = "InsertAppClick";//点击行为
+        const val ML_STATISTICS_INSERT_METHOD_COST_TIME = "InsertMethodCostTime";//方法耗时行为
         const val ML_STATISTICS_APP_PAGE = "AppPage";//页面统计
         const val ML_STATISTICS_SELECT_APP_CLICK = "selectAppClick";//查询点击的行为
         const val ML_STATISTICS_SELECT_APP_CLICK_BY_TIME = "selectAppClickByTime";//查询某个时间点的时间
@@ -58,7 +62,7 @@ class MlStatisticsService : Service() {
         constructor(mlStatisticsService: MlStatisticsService, looper: Looper) : super(looper) {
             if (mlStatisticsServiceWeakReference == null) {
                 mlStatisticsServiceWeakReference = WeakReference<MlStatisticsService>(
-                        mlStatisticsService
+                    mlStatisticsService
                 );
             }
         }
@@ -71,13 +75,13 @@ class MlStatisticsService : Service() {
                 }
                 val bundle = msg.data;
                 val statisticesModelJsonString = bundle.getString(
-                        ML_STATISTICS_STATISTICES_JSON_MODEL,
-                        ""
+                    ML_STATISTICS_STATISTICES_JSON_MODEL,
+                    ""
                 );
 
                 if (mlStatisticsServiceWeakReference == null || mlStatisticsServiceWeakReference!!.get() == null || TextUtils.isEmpty(
-                                statisticesModelJsonString
-                        )
+                        statisticesModelJsonString
+                    )
                 ) {
                     return
                 }
@@ -85,17 +89,21 @@ class MlStatisticsService : Service() {
                 if (mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper == null) {
                     mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper =
                             MlSqLiteOpenHelper(
-                                    mlStatisticsServiceWeakReference!!.get()!!.applicationContext
+                                mlStatisticsServiceWeakReference!!.get()!!.applicationContext
                             );
                 }
 
                 val statisticesModel = gson.fromJson<StatisticesModel>(
-                        statisticesModelJsonString,
-                        StatisticesModel::class.java
+                    statisticesModelJsonString,
+                    StatisticesModel::class.java
                 )
+
                 //存储数据到本地数据库
                 if (statisticesModel.statisticesType.equals(ML_STATISTICS_INSERT_APP_CLICK)) {
-                    val appClickEventModel = statisticesModel.appClickEventModel;
+                    val appClickEventModel = gson.fromJson<AppClickEventModel>(
+                        statisticesModel.jsonString,
+                        AppClickEventModel::class.java
+                    );
                     if (appClickEventModel != null) {
                         //存储数据到本地
                         val contentValues = ContentValues();
@@ -111,18 +119,50 @@ class MlStatisticsService : Service() {
                         contentValues.put("createTime", appClickEventModel.createTime)
                         contentValues.put("extrans", appClickEventModel.extrans ?: "")
                         mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper!!.insert(
-                                TABLE_ML_EVENT_TABLE,
-                                contentValues
+                            TABLE_ML_EVENT_TABLE,
+                            contentValues
                         )
                     }
                 } else if (statisticesModel.statisticesType.equals(ML_STATISTICS_SELECT_APP_CLICK)) {//开启线程去查询，然后将结果存储到本地 cache目录，通知前端自行去获取 && 解析数据出来
                     mlStatisticsServiceWeakReference!!.get()!!.singleThreadExecutor.execute(
-                            SelectEnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, "\$AppClick", ML_STATISTICS_STATUS_10, statisticesModel.isNeedDeleteHistory)
+                        SelectEnventTableRunnable(
+                            mlStatisticsServiceWeakReference!!.get()!!,
+                            statisticesModel.dayTime,
+                            CONSTANT_APP_CLICK,
+                            ML_STATISTICS_STATUS_10,
+                            statisticesModel.isNeedDeleteHistory
+                        )
                     )
-                } else if (statisticesModel.statisticesType.equals(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)){
+                } else if (statisticesModel.statisticesType.equals(
+                        ML_STATISTICS_SELECT_APP_CLICK_BY_TIME
+                    )){
                     mlStatisticsServiceWeakReference!!.get()!!.singleThreadExecutor.execute(
-                            SelectEnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, "\$AppClick", ML_STATISTICS_STATUS_20, statisticesModel.isNeedDeleteHistory)
+                        SelectEnventTableRunnable(
+                            mlStatisticsServiceWeakReference!!.get()!!,
+                            statisticesModel.dayTime,
+                            CONSTANT_APP_CLICK,
+                            ML_STATISTICS_STATUS_20,
+                            statisticesModel.isNeedDeleteHistory
+                        )
                     )
+                }else if (statisticesModel.statisticesType.equals(ML_STATISTICS_INSERT_METHOD_COST_TIME)){//事件注入
+                    val costMethodModel = gson.fromJson<CostMethodModel>(statisticesModel.jsonString,CostMethodModel::class.java);
+                    if (costMethodModel!=null){
+                        //存储数据到本地
+                        val contentValues = ContentValues();
+                        contentValues.put("eventName",costMethodModel.eventName?:"")
+                        contentValues.put("deviceId",costMethodModel.deviceId?:"")
+                        contentValues.put("userUniCode",costMethodModel.userUniCode?:"")
+                        contentValues.put("className",costMethodModel.className?:"")
+                        contentValues.put("methodName",costMethodModel.methodName?:"")
+                        contentValues.put("createTime",costMethodModel.createTime)
+                        contentValues.put("SysTemStartTime",costMethodModel.startTime)
+                        contentValues.put("SysTemEndTime",costMethodModel.endTime)
+                        mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper!!.insert(
+                            TABLE_ML_TIME_TABLE,
+                            contentValues
+                        )
+                    }
                 }
             } else if (msg.what == ML_STATISTICS_MSG_WHAT_101) {//文件已经存储到本地了，需要通知前端
                 if (replyToClient == null) {
@@ -156,9 +196,15 @@ class MlStatisticsService : Service() {
          * @Descriptiion
          * @param dayTime 查询的时间
          * @param eventName 事件名称
-         * @param status 10 dayTime < createTime  20 dayTime == createTime
+         * @param status 10_dayTime < createTime  20_dayTime == createTime
          **/
-        constructor(service: MlStatisticsService, dayTime: Long, eventName: String, status: String, isNeedDelete: Boolean) : super() {
+        constructor(
+            service: MlStatisticsService,
+            dayTime: Long,
+            eventName: String,
+            status: String,
+            isNeedDelete: Boolean
+        ) : super() {
             anyArray.add(dayTime.toString())
             anyArray.add(eventName)
             this.status = status;
@@ -171,7 +217,7 @@ class MlStatisticsService : Service() {
                 if (mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper == null) {
                     mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper =
                             MlSqLiteOpenHelper(
-                                    mlStatisticsServiceWeakRefrence!!.get()!!.applicationContext
+                                mlStatisticsServiceWeakRefrence!!.get()!!.applicationContext
                             );
                 }
                 var sql = ""
@@ -182,8 +228,8 @@ class MlStatisticsService : Service() {
                 }
                 val cursor =
                         mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.rawQuery(
-                                sql,
-                                anyArray
+                            sql,
+                            anyArray
                         )
                 cursor?.let {
                     if (!it.moveToFirst()) {//没有任何一条数据
@@ -225,7 +271,11 @@ class MlStatisticsService : Service() {
                     }
 
                     val file =
-                            File(fileUtils.getSandboxPublickDiskCacheDir(mlStatisticsServiceWeakRefrence!!.get()!!.applicationContext) + "/" + anyArray[0] + ".txt")
+                            File(
+                                fileUtils.getSandboxPublickDiskCacheDir(
+                                    mlStatisticsServiceWeakRefrence!!.get()!!.applicationContext
+                                ) + "/" + anyArray[0] + ".txt"
+                            )
                     if (file.exists()) {
                         file.delete();
                     }
@@ -245,9 +295,9 @@ class MlStatisticsService : Service() {
                             where = "createTime = ? and eventName = ? "
                         }
                         mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.delete(
-                                TABLE_ML_EVENT_TABLE,
-                                where,
-                                anyArray
+                            TABLE_ML_EVENT_TABLE,
+                            where,
+                            anyArray
                         )
                     }
 

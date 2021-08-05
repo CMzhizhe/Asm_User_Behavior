@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.gxx.collectionuserbehaviorlibrary.model.AppClickEventModel;
+import com.gxx.collectionuserbehaviorlibrary.model.CostMethodModel;
 import com.gxx.collectionuserbehaviorlibrary.model.StatisticesModel;
 import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService;
 import com.gxx.collectionuserbehaviorlibrary.utils.FileUtils;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -41,8 +43,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static android.content.Context.BIND_AUTO_CREATE;
+import static com.gxx.collectionuserbehaviorlibrary.Constant.CONSTANT_APP_CLICK;
+import static com.gxx.collectionuserbehaviorlibrary.Constant.CONSTANT_APP_COST_METHOD_TIME;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_APP_CLICK_FILE_PATH;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_INSERT_APP_CLICK;
+import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_INSERT_METHOD_COST_TIME;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_MSG_WHAT_FROM_CLIENT_100;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_SELECT_APP_CLICK;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_SELECT_APP_CLICK_BY_TIME;
@@ -64,6 +69,7 @@ public class SensorsDataAPI {
     private Map<String, Object> mDeviceInfo = null;
     private String mDeviceId = "";
 
+    private OnSensorsDataAPITrackCostTimeListener onSensorsDataAPITrackCostTimeListener;
     private OnSensorsDataEveryTimeAPITrackClickListener onSensorsDataAPITrackClickListener;
     private OnSensorsDataUserUniCodeListener onSensorsDataUserUniCodeListener;//用户唯一userUnicode
     private OnSensorsDataAPITrackAllClickListener onSensorsDataAPITrackAllClickListener;//所有的点击统计事件
@@ -75,6 +81,10 @@ public class SensorsDataAPI {
     private Application application = null;
     private boolean isDebug = false;//是否为debug模式
     private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+
+    public void setOnSensorsDataAPITrackCostTimeListener(OnSensorsDataAPITrackCostTimeListener onSensorsDataAPITrackCostTimeListener) {
+        this.onSensorsDataAPITrackCostTimeListener = onSensorsDataAPITrackCostTimeListener;
+    }
 
     //用于获取用户设置的userUniCode 唯一ID，可为空
     public void setOnSensorsDataUserUniCodeListener(OnSensorsDataUserUniCodeListener onSensorsDataUserUniCodeListener) {
@@ -189,7 +199,7 @@ public class SensorsDataAPI {
 
                     StatisticesModel statisticesModel = new StatisticesModel();
                     statisticesModel.setStatisticesType(ML_STATISTICS_INSERT_APP_CLICK);
-                    statisticesModel.setAppClickEventModel(appClickEventModel);
+                    statisticesModel.setJsonString(gson.toJson(appClickEventModel));
                     Message message = Message.obtain();
                     message.what = ML_STATISTICS_MSG_WHAT_FROM_CLIENT_100;
                     Bundle bundle = new Bundle();
@@ -278,7 +288,7 @@ public class SensorsDataAPI {
             } else if (msg.what == ML_STATISTICS_MSG_WHAT_20) {//通知结果
                 try {
                     JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("event", "$AppClick");
+                    jsonObject.put("event", CONSTANT_APP_CLICK);
                     if (sensorsDataAPIWeakReference.get().mDeviceInfo != null) {
                         JSONObject deviceInfoJsonObject = new JSONObject(sensorsDataAPIWeakReference.get().mDeviceInfo);
                         jsonObject.put("deviceInfo", deviceInfoJsonObject);
@@ -429,6 +439,66 @@ public class SensorsDataAPI {
      **/
     public interface OnSensorsDataAPITrackAllClickListener {
         void onSensorsDataAPITrackAllClick(JSONObject jsonObject);
+    }
+
+    /**
+     * @date 创建时间:2021/8/5 0005
+     * @auther gaoxiaoxiong
+     * @Descriptiion 耗时回调
+     **/
+    public interface OnSensorsDataAPITrackCostTimeListener{
+        void onSensorsDataAPITrackCostTime(long startTime, long endTime,String className,String methodName);
+    }
+
+    /**
+     * @date 创建时间:2021/8/5 0005
+     * @auther gaoxiaoxiong
+     * @Descriptiion 耗时统计
+     **/
+    public void trackCostTime(long startTime, long endTime,String className,String methodName){
+        try {
+            String yyyyMMdd = simpleCreateTimeFormat.format(new Date());
+            Date yyyyMMddDate = simpleCreateTimeFormat.parse(yyyyMMdd);
+            StatisticesModel statisticesModel = new StatisticesModel();
+            statisticesModel.setStatisticesType(ML_STATISTICS_INSERT_METHOD_COST_TIME);
+            CostMethodModel costMethodModel = new CostMethodModel();
+            costMethodModel.setEventName(CONSTANT_APP_COST_METHOD_TIME);
+            costMethodModel.setCreateTime(yyyyMMddDate.getTime());
+            if (!TextUtils.isEmpty(mDeviceId)) {
+                costMethodModel.setDeviceId(mDeviceId);
+            }
+            if (onSensorsDataUserUniCodeListener != null && !TextUtils.isEmpty(onSensorsDataUserUniCodeListener.onUserUniCode())) {
+                costMethodModel.setUserUniCode(onSensorsDataUserUniCodeListener.onUserUniCode());
+            }
+            costMethodModel.setStartTime(startTime);
+            costMethodModel.setEndTime(endTime);
+            costMethodModel.setClassName(className);
+            costMethodModel.setMethodName(methodName);
+            statisticesModel.setJsonString(gson.toJson(costMethodModel));
+            Message message = Message.obtain();
+            message.what = ML_STATISTICS_MSG_WHAT_FROM_CLIENT_100;
+            Bundle bundle = new Bundle();
+            bundle.putString(ML_STATISTICS_STATISTICES_JSON_MODEL, gson.toJson(statisticesModel));
+            message.setData(bundle);
+            //使用send方法发送
+            message.replyTo = clientMessenger;
+            serviceMessenger.send(message);
+        } catch (RemoteException remoteException) {
+            remoteException.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        if (onSensorsDataAPITrackCostTimeListener!=null){
+            onSensorsDataAPITrackCostTimeListener.onSensorsDataAPITrackCostTime(startTime,endTime,className,methodName);
+        }
+        if (isDebug){
+            Log.i(TAG,"className = " + className);
+            Log.i(TAG,"methodName = " + methodName);
+            Log.i(TAG,"startTime = " + startTime);
+            Log.i(TAG,"endTime = " + endTime);
+            Log.i(TAG,"超时啦");
+        }
     }
 
 

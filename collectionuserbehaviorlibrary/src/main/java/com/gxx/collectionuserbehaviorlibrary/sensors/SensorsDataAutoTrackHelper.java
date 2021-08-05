@@ -28,6 +28,8 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 
+import static com.gxx.collectionuserbehaviorlibrary.Constant.CONSTANT_APP_CLICK;
+
 @SuppressWarnings("unused")
 public class SensorsDataAutoTrackHelper {
     @Keep
@@ -70,7 +72,7 @@ public class SensorsDataAutoTrackHelper {
             properties.put("$element_type", "Dialog");
 
             if (SensorsDataAPI.getInstance()!=null){
-                SensorsDataAPI.getInstance().track("$AppClick", properties);
+                SensorsDataAPI.getInstance().track(CONSTANT_APP_CLICK, properties);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -155,7 +157,7 @@ public class SensorsDataAutoTrackHelper {
             properties.put("isChecked", isChecked);
 
             if (SensorsDataAPI.getInstance()!=null){
-                SensorsDataAPI.getInstance().track("$AppClick", properties);
+                SensorsDataAPI.getInstance().track(CONSTANT_APP_CLICK, properties);
             }
 
         } catch (Exception e) {
@@ -210,7 +212,7 @@ public class SensorsDataAutoTrackHelper {
             properties.put("$element_type", "Dialog");
 
             if (SensorsDataAPI.getInstance()!=null){
-                SensorsDataAPI.getInstance().track("$AppClick", properties);
+                SensorsDataAPI.getInstance().track(CONSTANT_APP_CLICK, properties);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -253,7 +255,7 @@ public class SensorsDataAutoTrackHelper {
             }
 
             if (SensorsDataAPI.getInstance()!=null){
-                SensorsDataAPI.getInstance().track("$AppClick", jsonObject);
+                SensorsDataAPI.getInstance().track(CONSTANT_APP_CLICK, jsonObject);
             }
 
         } catch (Exception e) {
@@ -270,7 +272,7 @@ public class SensorsDataAutoTrackHelper {
             properties.put("$element_content", tabName);
 
             if (SensorsDataAPI.getInstance()!=null){
-                SensorsDataAPI.getInstance().track("$AppClick", properties);
+                SensorsDataAPI.getInstance().track(CONSTANT_APP_CLICK, properties);
             }
 
         } catch (Exception e) {
@@ -330,7 +332,7 @@ public class SensorsDataAutoTrackHelper {
             }
 
             if (SensorsDataAPI.getInstance()!=null){
-                SensorsDataAPI.getInstance().track("$AppClick", properties);
+                SensorsDataAPI.getInstance().track(CONSTANT_APP_CLICK, properties);
             }
 
         } catch (Exception e) {
@@ -396,7 +398,7 @@ public class SensorsDataAutoTrackHelper {
             }
 
             if ( SensorsDataAPI.getInstance()!=null){
-                SensorsDataAPI.getInstance().track("$AppClick", properties);
+                SensorsDataAPI.getInstance().track(CONSTANT_APP_CLICK, properties);
             }
 
         } catch (Exception e) {
@@ -425,7 +427,7 @@ public class SensorsDataAutoTrackHelper {
             }
 
             if (SensorsDataAPI.getInstance()!=null){
-                SensorsDataAPI.getInstance().track("$AppClick", jsonObject);
+                SensorsDataAPI.getInstance().track(CONSTANT_APP_CLICK, jsonObject);
             }
         } catch (Exception e) {
             e.printStackTrace();

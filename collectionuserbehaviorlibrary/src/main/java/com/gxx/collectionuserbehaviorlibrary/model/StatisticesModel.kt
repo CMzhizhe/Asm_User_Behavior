@@ -7,20 +7,20 @@ class StatisticesModel() : Parcelable{
     var statisticesType:String = "";//统计行为
     var isNeedDeleteHistory:Boolean = true;//是否需要进行删除操作
     var dayTime:Long = 0L;
-    var appClickEventModel:AppClickEventModel? = null;
+    var jsonString:String = "";
 
     constructor(parcel: Parcel) : this() {
         statisticesType = parcel.readString()?:""
         isNeedDeleteHistory = parcel.readByte() != 0.toByte()
         dayTime = parcel.readLong()
-        appClickEventModel = parcel.readParcelable(AppClickEventModel::class.java.classLoader)
+        jsonString = parcel.readString()?:""
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(statisticesType)
         parcel.writeByte(if (isNeedDeleteHistory) 1 else 0)
         parcel.writeLong(dayTime)
-        parcel.writeParcelable(appClickEventModel, flags)
+        parcel.writeString(jsonString)
     }
 
     override fun describeContents(): Int {
