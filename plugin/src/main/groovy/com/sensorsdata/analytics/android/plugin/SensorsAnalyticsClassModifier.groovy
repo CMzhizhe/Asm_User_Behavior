@@ -18,8 +18,8 @@ public class SensorsAnalyticsClassModifier {
 
     public SensorsAnalyticsClassModifier(String excludeString) {
         exclude.clear()
-        exclude.add('android/support')
-        exclude.add('com/gxx/collectionuserbehaviorlibrary')
+      /*  exclude.add('android/support')
+        exclude.add('com/gxx/collectionuserbehaviorlibrary')*/
         if (excludeString != null && excludeString.trim().length() > 0) {
             String[] excludeArray = excludeString.split(",");
             for (int i = 0; i < excludeArray.length; i++) {

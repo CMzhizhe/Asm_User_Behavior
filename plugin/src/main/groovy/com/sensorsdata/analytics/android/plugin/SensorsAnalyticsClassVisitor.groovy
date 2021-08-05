@@ -15,12 +15,7 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
         this.classVisitor = classVisitor
     }
 
-    private static void visitMethodWithLoadedParams(MethodVisitor methodVisitor, int opcode, String owner, String methodName, String methodDesc, int start, int count, List<Integer> paramOpcodes) {
-        for (int i = start; i < start + count; i++) {
-            methodVisitor.visitVarInsn(paramOpcodes[i - start], i)
-        }
-        methodVisitor.visitMethodInsn(opcode, owner, methodName, methodDesc, false)
-    }
+
 
     /**
      * 该方法是当扫描类时第一个拜访的方法，主要用于类声明使用
@@ -39,6 +34,7 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
     @Override
     void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         super.visit(version, access, name, signature, superName, interfaces)
+
         mInterfaces = interfaces
     }
 
@@ -137,7 +133,7 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
                     }
                     boolean isStaticMethod = SensorsAnalyticsUtils.isStatic(access)
                     if (!isStaticMethod) {
-                        if (lambdaMethodCell.desc == '(Landroid/view/ MenuItem;)Z') {
+                        if (lambdaMethodCell.desc == '(Landroid/view/MenuItem;)Z') {
                             methodVisitor.visitVarInsn(ALOAD, 0)
                             methodVisitor.visitVarInsn(ALOAD, getVisitPosition(lambdaTypes, paramStart, isStaticMethod))
                             methodVisitor.visitMethodInsn(INVOKESTATIC, SDK_API_CLASS, lambdaMethodCell.agentName, '(Ljava/lang/Object;Landroid/view/MenuItem;)V', false)
