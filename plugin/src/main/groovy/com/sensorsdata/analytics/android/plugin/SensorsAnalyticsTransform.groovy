@@ -83,6 +83,15 @@ public class SensorsAnalyticsTransform extends Transform{
     void transform(TransformInvocation transformInvocation) throws TransformException, InterruptedException, IOException {
         printCopyRight()
 
+        if (sensorsAnalyticsExtension.disableAppClick){
+            println("已禁用点击统计")
+        }
+
+        if (sensorsAnalyticsExtension.disableCostTime){
+            println("已禁用方法耗时统计")
+        }
+
+
         if (!isIncremental()){
             transformInvocation.getOutputProvider().deleteAll()
         }

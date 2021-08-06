@@ -160,7 +160,7 @@ public class SensorsDataAPI {
         try {
             if (serviceMessenger != null && properties != null) {
                 //事件点击事件
-                if (eventName.equals("$AppClick")) {
+                if (eventName.equals(CONSTANT_APP_CLICK)) {
                     AppClickEventModel appClickEventModel = new AppClickEventModel();
                     String yyyyMMdd = simpleCreateTimeFormat.format(new Date());
                     Date yyyyMMddDate = simpleCreateTimeFormat.parse(yyyyMMdd);
@@ -373,13 +373,12 @@ public class SensorsDataAPI {
 
     /**
      * @param dayTime             格式必须为 yyyy-MM-dd 的long类型
-     * @param isNeedDeleteHistory 是否需要删除 < dayTime 的时间
      * @param isContainSelectTime  是否包含查询的时间 如果是true 获取历史的点击 = dayTime 都获取，如果是false  < dayTime 都获取
      * @date 创建时间:2021/7/26 0026
      * @auther gaoxiaoxiong
      * @Descriptiion
      **/
-    public void getHistoryAppClickData(long dayTime, boolean isContainSelectTime, boolean isNeedDeleteHistory) {
+    public void getHistoryAppClickData(long dayTime, boolean isContainSelectTime) {
         StatisticesModel statisticesMode = new StatisticesModel();
         statisticesMode.setDayTime(dayTime);
         if (!isContainSelectTime) {
@@ -387,7 +386,6 @@ public class SensorsDataAPI {
         }else {
             statisticesMode.setStatisticesType(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME);
         }
-        statisticesMode.setNeedDeleteHistory(isNeedDeleteHistory);
         if (clientMessenger != null && serviceMessenger != null) {
             try {
                 Message message = Message.obtain();
@@ -402,6 +400,9 @@ public class SensorsDataAPI {
             }
         }
     }
+
+
+
 
 
     /**

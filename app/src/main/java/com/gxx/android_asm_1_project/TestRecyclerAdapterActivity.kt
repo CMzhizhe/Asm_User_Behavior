@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.chad.library.adapter.base.BaseQuickAdapter
 import com.chad.library.adapter.base.listener.OnItemChildClickListener
 import com.chad.library.adapter.base.listener.OnItemClickListener
+import com.gxx.collectionuserbehaviorlibrary.sensors.TrackViewOnClick
 
 class TestRecyclerAdapterActivity : AppCompatActivity() {
 
@@ -27,12 +28,14 @@ class TestRecyclerAdapterActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this);
         recyclerView.adapter = testAdapter;
         testAdapter.setOnItemClickListener(object : OnItemClickListener {
+            @TrackViewOnClick
             override fun onItemClick(adapter: BaseQuickAdapter<*, *>, view: View, position: Int) {
                 Log.e("Test","onItemClick")
             }
         })
 
         testAdapter.setOnItemChildClickListener(object : OnItemChildClickListener {
+            @TrackViewOnClick
             override fun onItemChildClick(adapter: BaseQuickAdapter<*, *>, view: View, position: Int) {
                 Log.e("Test","onItemChildClick")
             }

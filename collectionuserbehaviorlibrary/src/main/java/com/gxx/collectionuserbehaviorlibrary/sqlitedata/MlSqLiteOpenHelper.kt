@@ -86,9 +86,9 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
      * @return void
      * @author lihy
      */
-    fun execSQL(sql: String, bindArgs: ArrayList<Any>) {
+    fun execSQL(sql: String, bindArgs: ArrayList<String>) {
         val database: SQLiteDatabase = getWritableDatabase()
-        database.execSQL(sql, bindArgs.toArray())
+        database.execSQL(sql, bindArgs.toTypedArray())
     }
 
 
@@ -137,6 +137,7 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
         val database: SQLiteDatabase = getWritableDatabase()
         database.update(table, values, whereClause, whereArgs)
     }
+
 
     /**
      *

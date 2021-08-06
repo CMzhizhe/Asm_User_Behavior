@@ -157,9 +157,20 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
                 }
 
                 if (isSensorsDataTrackViewOnClickAnnotation) {
+                    println("desc = " + desc)
+                    println("nameDesc = " + nameDesc)
                     if (desc == '(Landroid/view/View;)V') {
                         methodVisitor.visitVarInsn(ALOAD, 1)
                         methodVisitor.visitMethodInsn(INVOKESTATIC, SDK_API_CLASS, "trackViewOnClick", "(Landroid/view/View;)V", false)
+                        return
+                    }
+                    if (nameDesc == 'onItemClick(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V' ||  nameDesc == 'onItemChildClick(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V'){
+                        //兼容BaseRecyclerViewAdapterHelper 3.0.4
+                        if (nameDesc == 'onItemClick(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V'){
+
+                        }else if (nameDesc == 'onItemChildClick(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V'){
+
+                        }
                         return
                     }
                 }
@@ -224,7 +235,7 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
              */
             @Override
             AnnotationVisitor visitAnnotation(String s, boolean b) {
-                if (s == 'Lcom/gxx/collectionuserbehaviorlibrary/sensors/SensorsDataTrackViewOnClick;') {
+                if (s == 'Lcom/gxx/collectionuserbehaviorlibrary/sensors/TrackViewOnClick;') {
                     isSensorsDataTrackViewOnClickAnnotation = true
                 }
                 return super.visitAnnotation(s, b)

@@ -16,6 +16,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackAllClickListener, SensorsDataAPI.OnSensorsDataUserUniCodeListener {
+    companion object{
+        const val TAG = "MainActivity"
+    }
     private val simpleCreateTimeFormat = SimpleDateFormat("yyyy-MM-dd")
     var yyyyMMdd = simpleCreateTimeFormat.format(Date())
     var yyyyMMddDate = simpleCreateTimeFormat.parse(yyyyMMdd)
@@ -24,6 +27,13 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        findViewById<Button>(R.id.normal_button_click).setOnClickListener(object :View.OnClickListener{
+            override fun onClick(v: View?) {
+                Log.i(TAG,"点击事件")
+            }
+        })
+
         val test_recycler_adapter_bt =
             findViewById<Button>(R.id.bt_main_test_base_recycler_adapter);
         test_recycler_adapter_bt.setOnClickListener(object : View.OnClickListener {
@@ -31,6 +41,7 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
                 startActivity(Intent(this@MainActivity, TestRecyclerAdapterActivity::class.java))
             }
         })
+
 
         val dialogBuilder = AlertDialog.Builder(this);
         dialogBuilder.setTitle("标题")
@@ -41,16 +52,14 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
         dialog.show()
 
 
-
         //设置获取时间点的结果回调
         SensorsDataAPI.getInstance().setOnSensorsDataAPITrackAllClickListener(this)
         //设置用户唯一ID
         SensorsDataAPI.getInstance().setOnSensorsDataUserUniCodeListener(this)
-
         val btHistory = findViewById<Button>(R.id.bt_main_gethistory);
         btHistory.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
-                SensorsDataAPI.getInstance().getHistoryAppClickData(yyyyMMddDate.time,false,true);
+                SensorsDataAPI.getInstance().getHistoryAppClickData(yyyyMMddDate.time,true);
             }
         })
 
@@ -68,7 +77,7 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
         btSetTagProperties.setTag(R.id.sensors_analytics_tag_view_properties,"我是view_properties")
         btSetTagProperties.setOnClickListener(object :View.OnClickListener{
             override fun onClick(v: View?) {
-                SensorsDataAPI.getInstance().getHistoryAppClickData(yyyyMMddDate.time,true,true);
+                SensorsDataAPI.getInstance().getHistoryAppClickData(yyyyMMddDate.time,true);
             }
         })
 

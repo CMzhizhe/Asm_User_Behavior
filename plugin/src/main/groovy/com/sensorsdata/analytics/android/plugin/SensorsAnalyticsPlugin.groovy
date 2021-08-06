@@ -12,17 +12,9 @@ class SensorsAnalyticsPlugin implements Plugin<Project> {
         extension.excludeString = project.sensorsAnalytics.excludeString
         extension.disableAppClick = project.sensorsAnalytics.disableAppClick
         extension.disableCostTime =  project.sensorsAnalytics.disableCostTime
-        project.afterEvaluate {
-            if (extension.disableAppClick){
-                println("已禁用点击事件统计")
-            }
 
-            if (extension.disableCostTime){
-                println("已禁用方法耗时统计")
-            }
-            SensorsAnalyticsTransform sensorsAnalyticsTransform = new SensorsAnalyticsTransform(project,extension);
-            AppExtension appExtension = project.extensions.findByType(AppExtension.class)
-            appExtension.registerTransform(sensorsAnalyticsTransform)
-        }
+        SensorsAnalyticsTransform sensorsAnalyticsTransform = new SensorsAnalyticsTransform(project,extension);
+        AppExtension appExtension = project.extensions.findByType(AppExtension.class)
+        appExtension.registerTransform(sensorsAnalyticsTransform)
     }
 }
