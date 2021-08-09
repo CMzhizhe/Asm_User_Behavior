@@ -14,20 +14,6 @@ import java.util.regex.Matcher
 
 
 public class SensorsAnalyticsClassModifier {
-    private static HashSet<String> exclude = new HashSet<>()
-
-    public SensorsAnalyticsClassModifier(String excludeString) {
-        exclude.clear()
-      /*  exclude.add('android/support')
-        exclude.add('com/gxx/collectionuserbehaviorlibrary')*/
-        if (excludeString != null && excludeString.trim().length() > 0) {
-            String[] excludeArray = excludeString.split(",");
-            for (int i = 0; i < excludeArray.length; i++) {
-                exclude.add(excludeArray[i])
-            }
-        }
-    }
-
 
     static File modifyJar(File jarFile, File tempDir, boolean nameHex) {
         /**
@@ -65,7 +51,7 @@ public class SensorsAnalyticsClassModifier {
                 byte[] sourceClassBytes = IOUtils.toByteArray(inputStream)
                 if (entryName.endsWith(".class")) {
                     className = entryName.replace(Matcher.quoteReplacement(File.separator), ".").replace(".class", "")
-                    if (isShouldModify(className)) {
+                    if (isShouldModify(className,null)) {
                         modifiedClassBytes = modifyClass(sourceClassBytes)
                     }
                 }
@@ -97,24 +83,32 @@ public class SensorsAnalyticsClassModifier {
         return classWriter.toByteArray()
     }
 
-    protected static boolean isShouldModify(String className) {
-        Iterator<String> iterator = exclude.iterator()
-        while (iterator.hasNext()) {
-            String packageName = iterator.next()
-            if (className.startsWith(packageName)) {
-                return false
-            }
-        }
+    protected static boolean isShouldModify(String className,String pathUrl) {
+        boolean isSholdModify = false;
 
         if (className.contains('R$') ||
                 className.contains('R2$') ||
                 className.contains('R.class') ||
                 className.contains('R2.class') ||
                 className.contains('BuildConfig.class')) {
-            return false
+            return false;
         }
 
-        return true
+        if (pathUrl!=null){
+            pathUrl = pathUrl.replace(File.separator,"/")
+            Iterator<String> iterator = SensorsAnalyticsTransform.CONTAINS_LIBNAME.iterator()
+            //println("pathUrl = " + pathUrl)
+            while (iterator.hasNext()) {
+                String packageName = iterator.next()
+                if (pathUrl.contains(packageName)) {
+                    //println("packageName = " + packageName)
+                    isSholdModify = true;
+                    break
+                }
+            }
+        }
+
+        return isSholdModify
     }
 
     static File modifyClassFile(File dir, File classFile, File tempDir) {

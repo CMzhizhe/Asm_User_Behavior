@@ -10,7 +10,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Android_ASM_1_project">
-        <activity android:name=".MainActivity">
+        <activity android:name=".ui.activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -18,7 +18,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".TestRecyclerAdapterActivity"/>
+        <activity android:name=".ui.activity.TestRecyclerAdapterActivity"/>
+        <activity android:name=".ui.activity.FragmentActivity"/>
     </application>
 
 </manifest>

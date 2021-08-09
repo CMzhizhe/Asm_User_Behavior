@@ -39,9 +39,10 @@ android {
 }
 
 sensorsAnalytics {
+    disablePlugin = false//不禁用插件
     disableAppClick = false //不禁用点击统计
     disableCostTime = true //不禁用耗时统计
-    excludeString = "android/support,com/gxx/collectionuserbehaviorlibrary"//不想扫描的包路径名 比如 com.gxx.collectionuserbehaviorlibrary
+    containsString = "com/gxx/android_asm_1_project,com/chad/library/adapter/base"//想扫描的包路径名
 }
 
 

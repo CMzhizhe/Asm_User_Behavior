@@ -31,7 +31,7 @@ class SensorsAnalyticsHookConfig {
                 '(Landroid/view/View;)V',
                 'Landroid/view/View$OnClickListener;',
                 'trackViewOnClick',
-                '(Landroid/view/View;)V',
+                '(Landroid/view/View;Ljava/lang/String;)V',
                 1, 1,
                 [Opcodes.ALOAD])
 

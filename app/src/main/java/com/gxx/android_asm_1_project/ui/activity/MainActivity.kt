@@ -1,4 +1,4 @@
-package com.gxx.android_asm_1_project
+package com.gxx.android_asm_1_project.ui.activity
 
 import android.content.DialogInterface
 import android.content.Intent
@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.gxx.android_asm_1_project.R
 import com.gxx.collectionuserbehaviorlibrary.costtime.CostTime
 import com.gxx.collectionuserbehaviorlibrary.sensors.SensorsDataAPI
 import org.json.JSONObject
@@ -86,6 +87,13 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
         btTime.setOnClickListener(object :View.OnClickListener{
             override fun onClick(v: View) {
                 readNetWork();
+            }
+        })
+
+        val btFragmentClick = findViewById<Button>(R.id.bt_main_fragment_click)
+        btFragmentClick.setOnClickListener(object :View.OnClickListener{
+            override fun onClick(v: View?) {
+                startActivity(Intent(this@MainActivity,FragmentActivity::class.java))
             }
         })
     }

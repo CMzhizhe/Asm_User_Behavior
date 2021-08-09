@@ -3,11 +3,10 @@ package com.sensorsdata.analytics.android.plugin
 import org.objectweb.asm.*
 
 class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
-    private final
-    static String SDK_API_CLASS = "com/gxx/collectionuserbehaviorlibrary/sensors/SensorsDataAutoTrackHelper"
+    private final static String SDK_API_CLASS = "com/gxx/collectionuserbehaviorlibrary/sensors/SensorsDataAutoTrackHelper"
     private String[] mInterfaces
     private ClassVisitor classVisitor
-
+    private String currentClassName;
     private HashMap<String, SensorsAnalyticsMethodCell> mLambdaMethodCells = new HashMap<>()
 
     SensorsAnalyticsClassVisitor(final ClassVisitor classVisitor) {
@@ -34,8 +33,20 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
     @Override
     void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         super.visit(version, access, name, signature, superName, interfaces)
-
-        mInterfaces = interfaces
+        this.mInterfaces = interfaces
+        println("name = " + name);
+        name = name.replace("\$","%")
+        String[] nameArray = name.split("%")
+        println("nameArray = " + nameArray.toString());
+        if (nameArray!=null){
+            if (nameArray.size() > 0){
+                this.currentClassName = nameArray[0];
+            }else {
+                this.currentClassName = name;
+            }
+        }else {
+            this.currentClassName = name;
+        }
     }
 
     /**
@@ -64,9 +75,8 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
     MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         // 拿到需要修改的方法，执行修改操作
         MethodVisitor methodVisitor = super.visitMethod(access, name, desc, signature, exceptions)
-
         String nameDesc = name + desc
-
+        println("currentClassName = " + currentClassName)
         methodVisitor = new SensorsAnalyticsDefaultMethodVisitor(methodVisitor, access, name, desc) {
             boolean isSensorsDataTrackViewOnClickAnnotation = false
 
@@ -145,6 +155,12 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
                     for (int i = paramStart; i < paramStart + lambdaMethodCell.paramsCount; i++) {
                         methodVisitor.visitVarInsn(lambdaMethodCell.opcodes.get(i - paramStart), getVisitPosition(lambdaTypes, i, isStaticMethod))
                     }
+
+                    //onclick事件
+                    if (lambdaMethodCell.name.equals("onClick") && lambdaMethodCell.agentDesc == "(Landroid/view/View;Ljava/lang/String;)V"){
+                        methodVisitor.visitLdcInsn(currentClassName);
+                    }
+
                     methodVisitor.visitMethodInsn(INVOKESTATIC, SDK_API_CLASS, lambdaMethodCell.agentName, lambdaMethodCell.agentDesc, false)
                     return
                 }
@@ -157,29 +173,22 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
                 }
 
                 if (isSensorsDataTrackViewOnClickAnnotation) {
-                    println("desc = " + desc)
+                /*    println("desc = " + desc)
                     println("nameDesc = " + nameDesc)
+                    println("mInterfaces = " + mInterfaces)*/
                     if (desc == '(Landroid/view/View;)V') {
                         methodVisitor.visitVarInsn(ALOAD, 1)
-                        methodVisitor.visitMethodInsn(INVOKESTATIC, SDK_API_CLASS, "trackViewOnClick", "(Landroid/view/View;)V", false)
-                        return
-                    }
-                    if (nameDesc == 'onItemClick(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V' ||  nameDesc == 'onItemChildClick(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V'){
-                        //兼容BaseRecyclerViewAdapterHelper 3.0.4
-                        if (nameDesc == 'onItemClick(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V'){
-
-                        }else if (nameDesc == 'onItemChildClick(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V'){
-
-                        }
+                        methodVisitor.visitLdcInsn(currentClassName);
+                        methodVisitor.visitMethodInsn(INVOKESTATIC, SDK_API_CLASS, "trackViewOnClick", "(Landroid/view/View;Ljava/lang/String;)V", false)
                         return
                     }
                 }
 
-
                 if ((mInterfaces != null && mInterfaces.length > 0)) {
                     if ((mInterfaces.contains('android/view/View$OnClickListener') && nameDesc == 'onClick(Landroid/view/View;)V')) {
                         methodVisitor.visitVarInsn(ALOAD, 1)
-                        methodVisitor.visitMethodInsn(INVOKESTATIC, SDK_API_CLASS, "trackViewOnClick", "(Landroid/view/View;)V", false)
+                        methodVisitor.visitLdcInsn(currentClassName);
+                        methodVisitor.visitMethodInsn(INVOKESTATIC, SDK_API_CLASS, "trackViewOnClick", "(Landroid/view/View;Ljava/lang/String;)V", false)
                     } else if (mInterfaces.contains('android/content/DialogInterface$OnClickListener') && nameDesc == 'onClick(Landroid/content/DialogInterface;I)V') {
                         methodVisitor.visitVarInsn(ALOAD, 1)
                         methodVisitor.visitVarInsn(ILOAD, 2)
@@ -224,6 +233,19 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
                         methodVisitor.visitVarInsn(ILOAD, 4)
                         methodVisitor.visitMethodInsn(INVOKESTATIC, SDK_API_CLASS, "trackExpandableListViewChildOnClick", "(Landroid/widget/ExpandableListView;Landroid/view/View;II)V", false)
                     }
+                    /*else if (mInterfaces.contains("com/chad/library/adapter/base/listener/OnItemChildClickListener") && nameDesc == 'onItemChildClick(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V'){
+                        //兼容BaseRecyclerViewAdapterHelper 3.0.4
+                        methodVisitor.visitVarInsn(ALOAD, 1)
+                        methodVisitor.visitVarInsn(ALOAD, 2)
+                        methodVisitor.visitVarInsn(ILOAD, 3)
+                        methodVisitor.visitMethodInsn(INVOKESTATIC, SDK_API_CLASS, "trackAdapterOnItemChildClickViewOnClick", "(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V", false)
+                    }else if (mInterfaces.contains("com/chad/library/adapter/base/listener/OnItemClickListener") && nameDesc == 'onItemClick(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V'){
+                        //兼容BaseRecyclerViewAdapterHelper 3.0.4
+                        methodVisitor.visitVarInsn(ALOAD, 1)
+                        methodVisitor.visitVarInsn(ALOAD, 2)
+                        methodVisitor.visitVarInsn(ILOAD, 3)
+                        methodVisitor.visitMethodInsn(INVOKESTATIC, SDK_API_CLASS, "trackAdapterOnItemClickViewOnClick", "(Lcom/chad/library/adapter/base/BaseQuickAdapter;Landroid/view/View;I)V", false)
+                    }*/
                 }
             }
 

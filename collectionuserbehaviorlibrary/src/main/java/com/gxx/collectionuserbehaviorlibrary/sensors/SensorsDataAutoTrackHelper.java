@@ -17,11 +17,13 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import androidx.annotation.Keep;
 import androidx.appcompat.widget.SwitchCompat;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.gxx.collectionuserbehaviorlibrary.R;
 
 import org.json.JSONObject;
@@ -433,4 +435,32 @@ public class SensorsDataAutoTrackHelper {
             e.printStackTrace();
         }
     }
+
+    /**
+     * @date 创建时间:2021/8/9 0009
+     * @auther gaoxiaoxiong
+     * @Descriptiion 类名
+     **/
+   public static void trackViewOnClick(View view,String currentClassName) {
+       try {
+           JSONObject jsonObject = new JSONObject();
+           jsonObject.put("$element_type", SensorsDataPrivate.getElementType(view));
+           jsonObject.put("$element_id", SensorsDataPrivate.getViewId(view));
+           jsonObject.put("$element_content", SensorsDataPrivate.getElementContent(view));
+           if (view.getTag(R.id.sensors_analytics_tag_view_properties)!=null){
+               jsonObject.put("$viewTag",view.getTag(R.id.sensors_analytics_tag_view_properties));
+           }
+
+
+           if (!TextUtils.isEmpty(currentClassName)){
+               jsonObject.put("$activity", currentClassName);
+           }
+
+           if (SensorsDataAPI.getInstance()!=null){
+               SensorsDataAPI.getInstance().track(CONSTANT_APP_CLICK, jsonObject);
+           }
+       } catch (Exception e) {
+           e.printStackTrace();
+       }
+   }
 }

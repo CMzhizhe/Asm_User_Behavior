@@ -16,6 +16,8 @@ import  com.android.build.api.transform.Format
 
 
 public class SensorsAnalyticsTransform extends Transform{
+    public static HashSet<String> CONTAINS_LIBNAME = new HashSet<>()
+
     private static String fuckBug = "\n" +
             "   █████▒█    ██  ▄████▄   ██ ▄█▀       ██████╗ ██╗   ██╗ ██████╗\n" +
             " ▓██   ▒ ██  ▓██▒▒██▀ ▀█   ██▄█▒        ██╔══██╗██║   ██║██╔════╝\n" +
@@ -83,12 +85,25 @@ public class SensorsAnalyticsTransform extends Transform{
     void transform(TransformInvocation transformInvocation) throws TransformException, InterruptedException, IOException {
         printCopyRight()
 
+        if (sensorsAnalyticsExtension.disablePlugin){
+            println("已禁插件")
+        }
+
         if (sensorsAnalyticsExtension.disableAppClick){
             println("已禁用点击统计")
         }
 
         if (sensorsAnalyticsExtension.disableCostTime){
             println("已禁用方法耗时统计")
+        }
+
+
+        CONTAINS_LIBNAME.clear();
+        if (sensorsAnalyticsExtension.containsString != null && sensorsAnalyticsExtension.containsString.trim().length() > 0) {
+            String[] excludeArray = sensorsAnalyticsExtension.containsString.split(",");
+            for (int i = 0; i < excludeArray.length; i++) {
+                CONTAINS_LIBNAME.add(excludeArray[i])
+            }
         }
 
 
@@ -102,35 +117,39 @@ public class SensorsAnalyticsTransform extends Transform{
             input.directoryInputs.each { DirectoryInput directoryInput ->
                 //获取 output 目录
                 File dest = transformInvocation.getOutputProvider().getContentLocation(directoryInput.name, directoryInput.contentTypes, directoryInput.scopes,  Format.DIRECTORY)
-
                 File dir = directoryInput.file;
-
                 if (dir.exists()){
                     HashMap<String ,File> modifyMap = new HashMap<String ,File>();
-                    /**遍历以某一扩展名结尾的文件*/
-                    dir.traverse (type :FileType.FILES,nameFilter:~/.*\.class/){
-                        File classFile->
-                            SensorsAnalyticsClassModifier sensorsAnalyticsClassModifier = new SensorsAnalyticsClassModifier(sensorsAnalyticsExtension.excludeString)
-                            if (sensorsAnalyticsClassModifier.isShouldModify(classFile.name)){
-                                File modified = null;
+                    //遍历以某一扩展名结尾的文件
+                    if (!sensorsAnalyticsExtension.disablePlugin){
+                        dir.traverse (type :FileType.FILES,nameFilter:~/.*\.class/){
+                            File classFile->
+                                SensorsAnalyticsClassModifier sensorsAnalyticsClassModifier = new SensorsAnalyticsClassModifier()
+                                String classFileName = classFile.getName();
+                                classFileName = classFileName.replace(dir.getAbsolutePath(),"");
+                                if (sensorsAnalyticsClassModifier.isShouldModify(classFileName,classFile.getAbsolutePath())){
+                                    File modified = null;
 
-                                if (!sensorsAnalyticsExtension.disableAppClick){
-                                    modified = sensorsAnalyticsClassModifier.modifyClassFile(dir,classFile,transformInvocation.getContext().getTemporaryDir())
-                                }
+                                    if (!sensorsAnalyticsExtension.disableAppClick){
+                                        modified = sensorsAnalyticsClassModifier.modifyClassFile(dir,classFile,transformInvocation.getContext().getTemporaryDir())
+                                    }
 
-                                if (!sensorsAnalyticsExtension.disableCostTime){
-                                    modified = sensorsAnalyticsClassModifier.modifyClassFile2(dir,classFile,transformInvocation.getContext().getTemporaryDir())
-                                }
+                                    if (!sensorsAnalyticsExtension.disableCostTime){
+                                        modified = sensorsAnalyticsClassModifier.modifyClassFile2(dir,classFile,transformInvocation.getContext().getTemporaryDir())
+                                    }
 
-                                if (modified != null) {
-                                    /**key 为包名 + 类名，如：/cn/sensorsdata/autotrack/android/app/MainActivity.class*/
-                                    String ke = classFile.absolutePath.replace(dir.absolutePath, "")
-                                    modifyMap.put(ke, modified)
+                                    if (modified != null) {
+                                        //println("classFile.absolutePath = " + classFile.absolutePath);
+                                        //println("dir.absolutePath = " + dir.absolutePath);
+                                        String ke = classFile.absolutePath.replace(dir.absolutePath, "")
+                                        modifyMap.put(ke, modified)
+                                    }
                                 }
-                            }
+                        }
                     }
 
                     FileUtils.copyDirectory(directoryInput.file, dest)
+
                     modifyMap.entrySet().each {
                         Map.Entry<String, File> en ->
                             File target = new File(dest.absolutePath + en.getKey())
@@ -148,24 +167,28 @@ public class SensorsAnalyticsTransform extends Transform{
             input.jarInputs.each { JarInput jarInput ->
                 String destName = jarInput.file.name
 
-                /**截取文件路径的 md5 值重命名输出文件,因为可能同名,会覆盖*/
+                //截取文件路径的 md5 值重命名输出文件,因为可能同名,会覆盖
                 def hexName = DigestUtils.md5Hex(jarInput.file.absolutePath).substring(0, 8)
-                /** 获取 jar 名字*/
+               //获取 jar 名字
                 if (destName.endsWith(".jar")) {
                     destName = destName.substring(0, destName.length() - 4)
                 }
 
-                /** 获得输出文件*/
+                //获得输出文件
                 File dest = transformInvocation.getOutputProvider().getContentLocation(destName + "_" + hexName, jarInput.contentTypes, jarInput.scopes, Format.JAR)
                 def modifiedJar = null;
-                SensorsAnalyticsClassModifier sensorsAnalyticsClassModifier = new SensorsAnalyticsClassModifier(sensorsAnalyticsExtension.excludeString)
-                if (!sensorsAnalyticsExtension.disableAppClick) {
-                    modifiedJar = sensorsAnalyticsClassModifier.modifyJar(jarInput.file, transformInvocation.getContext().getTemporaryDir(), true)
+
+                if (!sensorsAnalyticsExtension.disablePlugin){
+                    SensorsAnalyticsClassModifier sensorsAnalyticsClassModifier = new SensorsAnalyticsClassModifier()
+                    if (!sensorsAnalyticsExtension.disableAppClick) {
+                        modifiedJar = sensorsAnalyticsClassModifier.modifyJar(jarInput.file, transformInvocation.getContext().getTemporaryDir(), true)
+                    }
+
+                    if (!sensorsAnalyticsExtension.disableCostTime) {
+                        modifiedJar = sensorsAnalyticsClassModifier.modifyJar(jarInput.file, transformInvocation.getContext().getTemporaryDir(), true)
+                    }
                 }
 
-                if (!sensorsAnalyticsExtension.disableCostTime) {
-                    modifiedJar = sensorsAnalyticsClassModifier.modifyJar(jarInput.file, transformInvocation.getContext().getTemporaryDir(), true)
-                }
 
                 if (modifiedJar == null) {
                     modifiedJar = jarInput.file
