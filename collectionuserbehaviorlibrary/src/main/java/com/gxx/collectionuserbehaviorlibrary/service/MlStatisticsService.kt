@@ -7,6 +7,7 @@ import android.os.*
 import android.text.TextUtils
 import com.google.gson.Gson
 import com.gxx.collectionuserbehaviorlibrary.Constant.Companion.CONSTANT_APP_CLICK
+import com.gxx.collectionuserbehaviorlibrary.Constant.Companion.CONSTANT_FUNCTION_TYPE_00
 import com.gxx.collectionuserbehaviorlibrary.model.AppClickEventModel
 import com.gxx.collectionuserbehaviorlibrary.model.CostMethodModel
 import com.gxx.collectionuserbehaviorlibrary.model.StatisticesModel
@@ -60,7 +61,7 @@ class MlStatisticsService : Service() {
         constructor(mlStatisticsService: MlStatisticsService, looper: Looper) : super(looper) {
             if (mlStatisticsServiceWeakReference == null) {
                 mlStatisticsServiceWeakReference = WeakReference<MlStatisticsService>(
-                    mlStatisticsService
+                        mlStatisticsService
                 );
             }
         }
@@ -73,34 +74,28 @@ class MlStatisticsService : Service() {
                 }
                 val bundle = msg.data;
                 val statisticesModelJsonString = bundle.getString(
-                    ML_STATISTICS_STATISTICES_JSON_MODEL,
-                    ""
+                        ML_STATISTICS_STATISTICES_JSON_MODEL,
+                        ""
                 );
 
-                if (mlStatisticsServiceWeakReference == null || mlStatisticsServiceWeakReference!!.get() == null || TextUtils.isEmpty(
-                        statisticesModelJsonString
-                    )
-                ) {
+                if (mlStatisticsServiceWeakReference == null || mlStatisticsServiceWeakReference!!.get() == null || TextUtils.isEmpty(statisticesModelJsonString)) {
                     return
                 }
 
                 if (mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper == null) {
-                    mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper =
-                            MlSqLiteOpenHelper(
-                                mlStatisticsServiceWeakReference!!.get()!!.applicationContext
-                            );
+                    mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper = MlSqLiteOpenHelper(mlStatisticsServiceWeakReference!!.get()!!.applicationContext);
                 }
 
                 val statisticesModel = gson.fromJson<StatisticesModel>(
-                    statisticesModelJsonString,
-                    StatisticesModel::class.java
+                        statisticesModelJsonString,
+                        StatisticesModel::class.java
                 )
 
                 //存储数据到本地数据库
                 if (statisticesModel.statisticesType.equals(ML_STATISTICS_INSERT_APP_CLICK)) {
                     val appClickEventModel = gson.fromJson<AppClickEventModel>(
-                        statisticesModel.jsonString,
-                        AppClickEventModel::class.java
+                            statisticesModel.jsonString,
+                            AppClickEventModel::class.java
                     );
                     if (appClickEventModel != null) {
                         //存储数据到本地
@@ -108,49 +103,50 @@ class MlStatisticsService : Service() {
                         contentValues.put("eventName", appClickEventModel.eventName ?: "")
                         contentValues.put("deviceId", appClickEventModel.deviceId ?: "")
                         contentValues.put("userUniCode", appClickEventModel.userUniCode ?: "")
-                        contentValues.put("activityName", appClickEventModel.activityName ?: "")
-                        contentValues.put("fragmentName", appClickEventModel.fragmentName ?: "")
+                        contentValues.put("uiClassName", appClickEventModel.uiClassName ?: "")
                         contentValues.put("elementContent", appClickEventModel.elementContent ?: "")
                         contentValues.put("elementType", appClickEventModel.elementType ?: "")
                         contentValues.put("elementId", appClickEventModel.elementId ?: "")
                         contentValues.put("clickTime", appClickEventModel.clickTime)
                         contentValues.put("createTime", appClickEventModel.createTime)
                         contentValues.put("extrans", appClickEventModel.extrans ?: "")
-                        contentValues.put("isVisit",1)
-                        mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper!!.insert(
-                            TABLE_ML_EVENT_TABLE,
-                            contentValues
-                        )
+                        if (TextUtils.isEmpty(appClickEventModel.functionType)){
+                            contentValues.put("functionType", CONSTANT_FUNCTION_TYPE_00)
+                        }else{
+                            contentValues.put("functionType", appClickEventModel.functionType!!)
+                        }
+                        contentValues.put("isVisit", 1)
+                        mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper!!.insert(TABLE_ML_EVENT_TABLE, contentValues)
                     }
                 } else if (statisticesModel.statisticesType.equals(ML_STATISTICS_SELECT_APP_CLICK)) {//开启线程去查询，然后将结果存储到本地 cache目录，通知前端自行去获取 && 解析数据出来
                     mlStatisticsServiceWeakReference!!.get()!!.singleThreadExecutor.execute(
-                        EnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, CONSTANT_APP_CLICK, ML_STATISTICS_SELECT_APP_CLICK)
+                            EnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, CONSTANT_APP_CLICK, ML_STATISTICS_SELECT_APP_CLICK)
                     )
-                } else if (statisticesModel.statisticesType.equals(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)){
+                } else if (statisticesModel.statisticesType.equals(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)) {
                     mlStatisticsServiceWeakReference!!.get()!!.singleThreadExecutor.execute(
-                        EnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, CONSTANT_APP_CLICK, ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)
+                            EnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, CONSTANT_APP_CLICK, ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)
                     )
-                }else if (statisticesModel.statisticesType.equals(ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME)){//更新点击，更新过后，下次将不会再次查询出来
+                } else if (statisticesModel.statisticesType.equals(ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME)) {//更新点击，更新过后，下次将不会再次查询出来
                     mlStatisticsServiceWeakReference!!.get()!!.singleThreadExecutor.execute(
                             EnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, CONSTANT_APP_CLICK, ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME)
                     )
-                }else if (statisticesModel.statisticesType.equals(ML_STATISTICS_INSERT_METHOD_COST_TIME)){//耗时方法统计
-                    val costMethodModel = gson.fromJson<CostMethodModel>(statisticesModel.jsonString,CostMethodModel::class.java);
-                    if (costMethodModel!=null){
+                } else if (statisticesModel.statisticesType.equals(ML_STATISTICS_INSERT_METHOD_COST_TIME)) {//耗时方法统计
+                    val costMethodModel = gson.fromJson<CostMethodModel>(statisticesModel.jsonString, CostMethodModel::class.java);
+                    if (costMethodModel != null) {
                         //存储数据到本地
                         val contentValues = ContentValues();
-                        contentValues.put("eventName",costMethodModel.eventName?:"")
-                        contentValues.put("deviceId",costMethodModel.deviceId?:"")
-                        contentValues.put("userUniCode",costMethodModel.userUniCode?:"")
-                        contentValues.put("className",costMethodModel.className?:"")
-                        contentValues.put("methodName",costMethodModel.methodName?:"")
-                        contentValues.put("createTime",costMethodModel.createTime)
-                        contentValues.put("SysTemStartTime",costMethodModel.startTime)
-                        contentValues.put("SysTemEndTime",costMethodModel.endTime)
-                        contentValues.put("isVisit",1)
+                        contentValues.put("eventName", costMethodModel.eventName ?: "")
+                        contentValues.put("deviceId", costMethodModel.deviceId ?: "")
+                        contentValues.put("userUniCode", costMethodModel.userUniCode ?: "")
+                        contentValues.put("uiClassName", costMethodModel.uiClassName ?: "")
+                        contentValues.put("methodName", costMethodModel.methodName ?: "")
+                        contentValues.put("createTime", costMethodModel.createTime)
+                        contentValues.put("SysTemStartTime", costMethodModel.startTime)
+                        contentValues.put("SysTemEndTime", costMethodModel.endTime)
+                        contentValues.put("isVisit", 1)
                         mlStatisticsServiceWeakReference!!.get()!!.mlSqLiteOpenHelper!!.insert(
-                            TABLE_ML_TIME_TABLE,
-                            contentValues
+                                TABLE_ML_TIME_TABLE,
+                                contentValues
                         )
                     }
                 }
@@ -167,7 +163,6 @@ class MlStatisticsService : Service() {
             }
         }
     }
-
 
 
     override fun onDestroy() {

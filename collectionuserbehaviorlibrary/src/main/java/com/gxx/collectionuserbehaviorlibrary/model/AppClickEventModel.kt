@@ -13,28 +13,28 @@ public class AppClickEventModel() : Parcelable{
     var eventName: String = "";//事件名称
     var deviceId:String = "";//手机deviceID
     var userUniCode:String = "";//用户唯一ID
-    var activityName:String = "";//activity 名称
-    var fragmentName:String = "";//fragment 名称
+    var uiClassName:String = "";//ui类名称 名称
     var elementContent:String = "";//事件里面的文本内容
     var elementType:String = "";//事件类型
     var elementId:String = "";//事件的id
     var clickTime:Long = 0L;// 事件点击时间 yyyy-MM-dd HH:mm:ss
     var createTime:Long = 0L;//创建时间  yyyy-MM-dd
     var extrans:String = "";//额外参数
+    var functionType:String = "";//事件类型
 
     constructor(parcel: Parcel) : this() {
         id = parcel.readInt()
         eventName = parcel.readString()?:""
         deviceId = parcel.readString()?:""
         userUniCode = parcel.readString()?:""
-        activityName = parcel.readString()?:""
-        fragmentName = parcel.readString()?:""
+        uiClassName = parcel.readString()?:""
         elementContent = parcel.readString()?:""
         elementType = parcel.readString()?:""
         elementId = parcel.readString()?:""
         clickTime = parcel.readLong()
         createTime = parcel.readLong()
         extrans = parcel.readString()?:""
+        functionType = parcel.readString()?:""
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -42,14 +42,14 @@ public class AppClickEventModel() : Parcelable{
         parcel.writeString(eventName)
         parcel.writeString(deviceId)
         parcel.writeString(userUniCode)
-        parcel.writeString(activityName)
-        parcel.writeString(fragmentName)
+        parcel.writeString(uiClassName)
         parcel.writeString(elementContent)
         parcel.writeString(elementType)
         parcel.writeString(elementId)
         parcel.writeLong(clickTime)
         parcel.writeLong(createTime)
         parcel.writeString(extrans)
+        parcel.writeString(functionType)
     }
 
     override fun describeContents(): Int {
@@ -65,4 +65,6 @@ public class AppClickEventModel() : Parcelable{
             return arrayOfNulls(size)
         }
     }
+
+
 }

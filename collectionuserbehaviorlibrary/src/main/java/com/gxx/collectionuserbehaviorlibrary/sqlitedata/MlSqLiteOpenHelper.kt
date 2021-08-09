@@ -23,10 +23,10 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
     private val CREATE_EVENT_TABLE = "create table if not exists " + TABLE_ML_EVENT_TABLE + " ( " +
             "id integer primary key autoincrement, " +
             "eventName varchar(100)," + //事件名称，不可为空
+            "functionType varchar(100),"+//功能类型，可以自定义
             "deviceId varchar(100)," + //手机deviceID
             "userUniCode varchar(100)," +//用户唯一ID
-            "activityName varchar(100)," + //activity 名称
-            "fragmentName varchar(100)," +//fragment 名称
+            "uiClassName varchar(100)," + //ui类名称
             "elementContent varchar(100)," +//事件里面的文本内容
             "elementType varchar(100)," +//事件类型
             "elementId varchar(100)," +//事件的id
@@ -42,8 +42,7 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
             "eventName varchar(100)," + //事件名称，不可为空
             "deviceId varchar(100)," + //手机deviceID
             "userUniCode varchar(100)," +//用户唯一ID
-            "activityName varchar(100)," + //activity 名称
-            "fragmentName varchar(100)," +//fragment 名称
+            "uiClassName varchar(100)," + //ui类名称
             "createTime long," +//创建时间   yyyy-MM-dd
             "pageStartTime long," +//页面开始时间  yyyy-MM-dd HH:mm:ss
             "pageEndTime long," +//页面结束时间   yyyy-MM-dd HH:mm:ss
@@ -56,7 +55,7 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
             "eventName varchar(100)," + //事件名称，不可为空
             "deviceId varchar(100)," + //手机deviceID
             "userUniCode varchar(100)," +//用户唯一ID
-            "className varchar(100)," + //类名称
+            "uiClassName varchar(100)," + //ui类名称
             "methodName varchar(100)," +//方法名称
             "createTime long," +//创建时间   yyyy-MM-dd
             "SysTemStartTime long," +//微妙开始值

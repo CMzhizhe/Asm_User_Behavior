@@ -33,6 +33,12 @@
             android:textAllCaps="false" />
 
         <Button
+            android:id="@+id/update_click"
+            android:text="更新 click事件 "
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <Button
             android:id="@+id/bt_main_test_base_recycler_adapter"
             android:layout_width="match_parent"
             android:layout_height="44dp"
@@ -56,12 +62,10 @@
 
         <Button
             android:id="@+id/bt_main_setTag_properties"
-            android:text="我是button Tag到properties里面"
+            android:text="我是 button，我将参数设置到View的Tag里面"
             android:textColor="@color/white"
             android:layout_width="match_parent"
             android:layout_height="44dp"/>
-
-
 
 
         <TextView

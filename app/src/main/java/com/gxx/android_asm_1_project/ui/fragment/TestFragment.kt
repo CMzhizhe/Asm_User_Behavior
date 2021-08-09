@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.gxx.android_asm_1_project.R
+import com.gxx.android_asm_1_project.ui.dialog.NoticeDialog
 
 class TestFragment : Fragment() ,View.OnClickListener{
     companion object{
@@ -17,6 +18,7 @@ class TestFragment : Fragment() ,View.OnClickListener{
             return fragment
         }
     }
+
 
 
     override fun onCreateView(
@@ -36,6 +38,14 @@ class TestFragment : Fragment() ,View.OnClickListener{
         view.setOnClickListener { v: View? ->
             Log.e(TAG, "我被点击啦")
         }
+
+        val tvdialogNotice = view.findViewById<TextView>(R.id.tv_fragment_dialog)
+        tvdialogNotice.setOnClickListener { v: View? ->
+             val noticeDialog = NoticeDialog(this@TestFragment.context!!);
+            noticeDialog.show()
+        }
+
+
         return view
     }
 

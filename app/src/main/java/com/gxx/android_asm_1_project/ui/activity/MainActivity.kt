@@ -96,6 +96,13 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
                 startActivity(Intent(this@MainActivity,FragmentActivity::class.java))
             }
         })
+
+        val updateClick = findViewById<Button>(R.id.update_click);
+        updateClick.setOnClickListener(object :View.OnClickListener{
+            override fun onClick(v: View?) {
+                SensorsDataAPI.getInstance().updateHistoryAppClickDataByTime(yyyyMMddDate.time);
+            }
+        })
     }
 
 

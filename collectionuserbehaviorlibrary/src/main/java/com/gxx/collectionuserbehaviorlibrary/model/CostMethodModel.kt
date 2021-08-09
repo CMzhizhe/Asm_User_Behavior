@@ -7,7 +7,7 @@ class CostMethodModel(): Parcelable {
     var eventName:String = "";
     var startTime:Long = 0L;
     var endTime:Long = 0L;
-    var className:String = "";
+    var uiClassName:String = "";
     var methodName:String = "";
     var deviceId:String="";
     var userUniCode:String = ""
@@ -17,7 +17,7 @@ class CostMethodModel(): Parcelable {
         eventName = parcel.readString()?:""
         startTime = parcel.readLong()
         endTime = parcel.readLong()
-        className = parcel.readString()?:""
+        uiClassName = parcel.readString()?:""
         methodName = parcel.readString()?:""
         deviceId = parcel.readString()?:""
         userUniCode = parcel.readString()?:""
@@ -28,7 +28,7 @@ class CostMethodModel(): Parcelable {
         parcel.writeString(eventName)
         parcel.writeLong(startTime)
         parcel.writeLong(endTime)
-        parcel.writeString(className)
+        parcel.writeString(uiClassName)
         parcel.writeString(methodName)
         parcel.writeString(deviceId)
         parcel.writeString(userUniCode)

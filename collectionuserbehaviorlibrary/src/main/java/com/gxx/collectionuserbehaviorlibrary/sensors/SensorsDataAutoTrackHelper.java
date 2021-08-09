@@ -17,13 +17,11 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import androidx.annotation.Keep;
 import androidx.appcompat.widget.SwitchCompat;
 
-import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.gxx.collectionuserbehaviorlibrary.R;
 
 import org.json.JSONObject;
@@ -57,7 +55,7 @@ public class SensorsDataAutoTrackHelper {
             JSONObject properties = new JSONObject();
             //$screen_name & $title
             if (activity != null) {
-                properties.put("$activity", activity.getClass().getCanonicalName());
+                properties.put("$uiClassName", activity.getClass().getCanonicalName().replace(".","/"));
             }
 
             Button button = null;
@@ -102,7 +100,7 @@ public class SensorsDataAutoTrackHelper {
             }
 
             if (activity != null) {
-                properties.put("$activity", activity.getClass().getCanonicalName());
+                properties.put("$uiClassName", activity.getClass().getCanonicalName().replace(".","/"));
             }
 
             String viewText = null;
@@ -190,7 +188,7 @@ public class SensorsDataAutoTrackHelper {
             JSONObject properties = new JSONObject();
             //$screen_name & $title
             if (activity != null) {
-                properties.put("$activity", activity.getClass().getCanonicalName());
+                properties.put("$uiClassName", activity.getClass().getCanonicalName().replace(".","/"));
             }
 
             ListView listView = null;
@@ -252,7 +250,7 @@ public class SensorsDataAutoTrackHelper {
 
                 Activity activity = SensorsDataPrivate.getActivityFromContext(context);
                 if (activity != null) {
-                    jsonObject.put("$activity", activity.getClass().getCanonicalName());
+                    jsonObject.put("$uiClassName", activity.getClass().getCanonicalName());
                 }
             }
 
@@ -300,7 +298,7 @@ public class SensorsDataAutoTrackHelper {
             JSONObject properties = new JSONObject();
             Activity activity = SensorsDataPrivate.getActivityFromContext(context);
             if (activity != null) {
-                properties.put("$activity", activity.getClass().getCanonicalName());
+                properties.put("$uiClassName", activity.getClass().getCanonicalName().replace(".","/"));
             }
 
             if (childPosition != -1) {
@@ -360,7 +358,7 @@ public class SensorsDataAutoTrackHelper {
             }
 
             if (activity != null) {
-                properties.put("$activity", activity.getClass().getCanonicalName());
+                properties.put("$uiClassName", activity.getClass().getCanonicalName().replace(".","/"));
             }
             properties.put("$element_position", String.valueOf(position));
 
@@ -425,7 +423,7 @@ public class SensorsDataAutoTrackHelper {
             }
             Activity activity = SensorsDataPrivate.getActivityFromView(view);
             if (activity != null) {
-                jsonObject.put("$activity", activity.getClass().getCanonicalName());
+                jsonObject.put("$uiClassName", activity.getClass().getCanonicalName());
             }
 
             if (SensorsDataAPI.getInstance()!=null){
@@ -453,7 +451,7 @@ public class SensorsDataAutoTrackHelper {
 
 
            if (!TextUtils.isEmpty(currentClassName)){
-               jsonObject.put("$activity", currentClassName);
+               jsonObject.put("$uiClassName", currentClassName);
            }
 
            if (SensorsDataAPI.getInstance()!=null){

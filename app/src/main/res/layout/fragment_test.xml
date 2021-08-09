@@ -13,12 +13,29 @@
         android:layout_width="match_parent"
         android:layout_height="44dp"/>
 
-
+    <View
+        android:background="#e8e8e8"
+        android:layout_width="match_parent"
+        android:layout_height="2px"/>
 
     <TextView
         android:id="@+id/tv_fragment_lamada"
         android:gravity="center"
         android:text="Lamada onclick 点击我试试？"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"/>
+
+    <View
+        android:background="#e8e8e8"
+        android:layout_width="match_parent"
+        android:layout_height="2px"/>
+
+    <TextView
+        android:id="@+id/tv_fragment_dialog"
+        android:gravity="center"
+        android:text="Dialog 弹窗试试"
         android:textColor="@color/black"
         android:textSize="16sp"
         android:layout_width="match_parent"

@@ -52,6 +52,7 @@ import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_SELECT_APP_CLICK;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_SELECT_APP_CLICK_BY_TIME;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_STATISTICES_JSON_MODEL;
+import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME;
 
 /**
  * Created by 王灼洲 on 2018/7/22
@@ -173,8 +174,8 @@ public class SensorsDataAPI {
                         appClickEventModel.setDeviceId(mDeviceId);
                     }
 
-                    if (properties.has("$activity") && !TextUtils.isEmpty(properties.getString("$activity"))) {
-                        appClickEventModel.setActivityName(properties.getString("$activity"));
+                    if (properties.has("$uiClassName") && !TextUtils.isEmpty(properties.getString("$uiClassName"))) {
+                        appClickEventModel.setUiClassName(properties.getString("$uiClassName"));
                     }
 
                     if (properties.has("$element_content") && !TextUtils.isEmpty(properties.getString("$element_content"))) {
@@ -402,7 +403,30 @@ public class SensorsDataAPI {
     }
 
 
-
+    /**
+     * @date 创建时间:2021/8/9 0009
+     * @auther gaoxiaoxiong
+     * @Descriptiion 更新点击，是包含当前的时间的，
+     * @param dayTime yyyy-MM-dd 的long类型的时间
+     **/
+    public void updateHistoryAppClickDataByTime(long dayTime){
+        StatisticesModel statisticesMode = new StatisticesModel();
+        statisticesMode.setDayTime(dayTime);
+        statisticesMode.setStatisticesType(ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME);
+        if (clientMessenger != null && serviceMessenger != null) {
+            try {
+                Message message = Message.obtain();
+                Bundle bundle = new Bundle();
+                bundle.putString(ML_STATISTICS_STATISTICES_JSON_MODEL, gson.toJson(statisticesMode));
+                message.what = ML_STATISTICS_MSG_WHAT_FROM_CLIENT_100;
+                message.setData(bundle);
+                message.replyTo = clientMessenger;
+                serviceMessenger.send(message);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 
     /**
@@ -473,7 +497,7 @@ public class SensorsDataAPI {
             }
             costMethodModel.setStartTime(startTime);
             costMethodModel.setEndTime(endTime);
-            costMethodModel.setClassName(className);
+            costMethodModel.setUiClassName(className);
             costMethodModel.setMethodName(methodName);
             statisticesModel.setJsonString(gson.toJson(costMethodModel));
             Message message = Message.obtain();

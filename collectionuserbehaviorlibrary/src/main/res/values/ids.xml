@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--json参数-->
     <item name="sensors_analytics_tag_view_properties" type="id"/>
+    <!--事件类型-->
+    <item name="sensors_analytics_tag_view_function_type" type="id"/>
 </resources>

@@ -58,7 +58,7 @@ class EnventTableRunnable:Runnable {
             }else if (status.equals(ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME)){
                 sql = "update " + MlSqLiteOpenHelper.TABLE_ML_EVENT_TABLE + " set isVisit = 0  where createTime in (?) ";
             }
-            
+
             if (status.equals(ML_STATISTICS_SELECT_APP_CLICK) || status.equals(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)){
                 anyArray.add(dayTime.toString())
                 anyArray.add(eventName)
@@ -74,29 +74,29 @@ class EnventTableRunnable:Runnable {
                         val eventName = cursor.getString(cursor.getColumnIndex("eventName"))
                         val deviceId = cursor.getString(cursor.getColumnIndex("deviceId"))
                         val userUniCode = cursor.getString(cursor.getColumnIndex("userUniCode"))
-                        val activityName = cursor.getString(cursor.getColumnIndex("activityName"))
-                        val fragmentName = cursor.getString(cursor.getColumnIndex("fragmentName"))
+                        val uiClassName = cursor.getString(cursor.getColumnIndex("uiClassName"))
                         val elementContent = cursor.getString(cursor.getColumnIndex("elementContent"))
                         val elementType = cursor.getString(cursor.getColumnIndex("elementType"))
                         val elementId = cursor.getString(cursor.getColumnIndex("elementId"));
                         val clickTime = cursor.getLong(cursor.getColumnIndex("clickTime"))
                         val createTime = cursor.getLong(cursor.getColumnIndex("createTime"))
                         val extrans = cursor.getString(cursor.getColumnIndex("extrans"))
-
+                        val functionType = cursor.getString(cursor.getColumnIndex("functionType"))
                         model.id = id;
                         model.eventName = eventName
                         model.deviceId = deviceId;
                         model.userUniCode = userUniCode;
-                        model.activityName = activityName;
-                        model.fragmentName = fragmentName;
+                        model.uiClassName = uiClassName;
                         model.elementContent = elementContent;
                         model.elementType = elementType;
                         model.elementId = elementId;
                         model.clickTime = clickTime;
                         model.createTime = createTime;
                         model.extrans = extrans;
+                        model.functionType = functionType
                         list.add(model)
                     } while (it.moveToNext())
+
                     it.close()
                     if (mlStatisticsServiceWeakRefrence == null || mlStatisticsServiceWeakRefrence!!.get() == null) {
                         return
