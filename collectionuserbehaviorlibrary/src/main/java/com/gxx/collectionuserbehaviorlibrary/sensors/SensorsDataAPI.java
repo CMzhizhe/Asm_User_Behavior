@@ -42,6 +42,7 @@ import java.util.concurrent.Executors;
 import static android.content.Context.BIND_AUTO_CREATE;
 import static com.gxx.collectionuserbehaviorlibrary.Constant.CONSTANT_APP_CLICK;
 import static com.gxx.collectionuserbehaviorlibrary.Constant.CONSTANT_APP_COST_METHOD_TIME;
+import static com.gxx.collectionuserbehaviorlibrary.Constant.CONSTANT_FUNCTION_TYPE_00;
 import static com.gxx.collectionuserbehaviorlibrary.runable.ParseLocalCacheFileRunnable.PARSE_LOCAL_CACHE_FILE;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_OPERATION_STATUS_SUCCESS;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_DELETE_APP_CLICK_BY_TIME;
@@ -192,8 +193,14 @@ public class SensorsDataAPI {
                         appClickEventModel.setElementId(properties.getString("$element_id"));
                     }
 
-                    if (properties.has("$viewTag") && !TextUtils.isEmpty(properties.getString("$viewTag"))) {
-                        appClickEventModel.setExtrans(properties.getString("$viewTag"));
+                    if (properties.has("$viewProperties") && !TextUtils.isEmpty(properties.getString("$viewProperties"))) {
+                        appClickEventModel.setExtrans(properties.getString("$viewProperties"));
+                    }
+
+                    if (properties.has("$functionType") && !TextUtils.isEmpty(properties.getString("$functionType"))) {
+                        appClickEventModel.setFunctionType(properties.getString("$functionType"));
+                    }else {
+                        appClickEventModel.setFunctionType(CONSTANT_FUNCTION_TYPE_00);
                     }
 
                     if (onSensorsDataUserUniCodeListener != null && !TextUtils.isEmpty(onSensorsDataUserUniCodeListener.onUserUniCode())) {

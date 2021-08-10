@@ -419,8 +419,13 @@ public class SensorsDataAutoTrackHelper {
             jsonObject.put("$element_id", SensorsDataPrivate.getViewId(view));
             jsonObject.put("$element_content", SensorsDataPrivate.getElementContent(view));
             if (view.getTag(R.id.sensors_analytics_tag_view_properties)!=null){
-                jsonObject.put("$viewTag",view.getTag(R.id.sensors_analytics_tag_view_properties));
+                jsonObject.put("$viewProperties",view.getTag(R.id.sensors_analytics_tag_view_properties));
             }
+
+            if (view.getTag(R.id.sensors_analytics_tag_view_function_type)!=null){
+                jsonObject.put("$functionType",view.getTag(R.id.sensors_analytics_tag_view_function_type));
+            }
+
             Activity activity = SensorsDataPrivate.getActivityFromView(view);
             if (activity != null) {
                 jsonObject.put("$uiClassName", activity.getClass().getCanonicalName());
@@ -446,9 +451,12 @@ public class SensorsDataAutoTrackHelper {
            jsonObject.put("$element_id", SensorsDataPrivate.getViewId(view));
            jsonObject.put("$element_content", SensorsDataPrivate.getElementContent(view));
            if (view.getTag(R.id.sensors_analytics_tag_view_properties)!=null){
-               jsonObject.put("$viewTag",view.getTag(R.id.sensors_analytics_tag_view_properties));
+               jsonObject.put("$viewProperties",view.getTag(R.id.sensors_analytics_tag_view_properties));
            }
 
+           if (view.getTag(R.id.sensors_analytics_tag_view_function_type)!=null){
+               jsonObject.put("$functionType",view.getTag(R.id.sensors_analytics_tag_view_function_type));
+           }
 
            if (!TextUtils.isEmpty(currentClassName)){
                jsonObject.put("$uiClassName", currentClassName);
