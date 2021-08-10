@@ -34,10 +34,10 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
     void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         super.visit(version, access, name, signature, superName, interfaces)
         this.mInterfaces = interfaces
-        println("name = " + name);
+        //println("name = " + name);
         name = name.replace("\$","%")
         String[] nameArray = name.split("%")
-        println("nameArray = " + nameArray.toString());
+        //println("nameArray = " + nameArray.toString());
         if (nameArray!=null){
             if (nameArray.size() > 0){
                 this.currentClassName = nameArray[0];
@@ -76,7 +76,7 @@ class SensorsAnalyticsClassVisitor extends ClassVisitor implements Opcodes {
         // 拿到需要修改的方法，执行修改操作
         MethodVisitor methodVisitor = super.visitMethod(access, name, desc, signature, exceptions)
         String nameDesc = name + desc
-        println("currentClassName = " + currentClassName)
+        //println("currentClassName = " + currentClassName)
         methodVisitor = new SensorsAnalyticsDefaultMethodVisitor(methodVisitor, access, name, desc) {
             boolean isSensorsDataTrackViewOnClickAnnotation = false
 

@@ -11,7 +11,7 @@ public class TimeCostHelper {
      * @Descriptiion
      **/
     public static void trackTime(long startTime, long endTime,String className,String methodName) {
-        if (endTime - startTime > 2000){
+        if (endTime - startTime > 1000){
            /* Log.i("TimeCostHelper","className = " + className);
             Log.i("TimeCostHelper","methodName = " + methodName);
             Log.i("TimeCostHelper","startTime = " + startTime);

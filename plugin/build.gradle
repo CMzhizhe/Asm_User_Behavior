@@ -1,5 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
 dependencies {
     implementation gradleApi() //gradle sdk
     implementation localGroovy() //groovy sdk
@@ -11,8 +13,15 @@ repositories {
     mavenCentral()
 }
 
+
+java {
+    withSourcesJar()
+    //注释支持
+    withJavadocJar()
+}
+
 uploadArchives {
-    repositories.mavenDeployer {
+    /*repositories.mavenDeployer {
         //本地仓库路径，以放到项目根目录下的 repo 的文件夹为例
         repository(url: uri('../repo'))
 
@@ -24,6 +33,6 @@ uploadArchives {
 
         //插件版本号
         pom.version = '1.0.0'
-    }
+    }*/
 }
 

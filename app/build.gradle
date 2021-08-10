@@ -41,7 +41,7 @@ android {
 sensorsAnalytics {
     disablePlugin = false//不禁用插件
     disableAppClick = false //不禁用点击统计
-    disableCostTime = true //不禁用耗时统计
+    disableCostTime = false //不禁用耗时统计
     containsString = "com/gxx/android_asm_1_project,com/chad/library/adapter/base"//想扫描的包路径名
 }
 
