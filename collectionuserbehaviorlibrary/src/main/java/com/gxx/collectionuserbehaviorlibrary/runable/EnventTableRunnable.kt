@@ -4,7 +4,11 @@ import android.os.Bundle
 import android.os.Message
 import com.google.gson.Gson
 import com.gxx.collectionuserbehaviorlibrary.model.AppClickEventModel
+import com.gxx.collectionuserbehaviorlibrary.model.OperationModel
 import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService
+import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.Companion.ML_OPERATION_STATUS_SUCCESS
+import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.Companion.ML_STATISTICS_DELETE_APP_CLICK_BY_TIME
+import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.Companion.ML_STATISTICS_OPERATION_CALLBACK
 import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.Companion.ML_STATISTICS_SELECT_APP_CLICK
 import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.Companion.ML_STATISTICS_SELECT_APP_CLICK_BY_TIME
 import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.Companion.ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME
@@ -56,7 +60,9 @@ class EnventTableRunnable:Runnable {
             }else if (status.equals(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)){
                 sql = "select * from " + MlSqLiteOpenHelper.TABLE_ML_EVENT_TABLE + " t where t.createTime = ? and t.eventName = ? and isVisit = 1 "
             }else if (status.equals(ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME)){
-                sql = "update " + MlSqLiteOpenHelper.TABLE_ML_EVENT_TABLE + " set isVisit = 0  where createTime in (?) ";
+                sql = "update " + MlSqLiteOpenHelper.TABLE_ML_EVENT_TABLE + " set isVisit = case id ";
+            }else if (status.equals(ML_STATISTICS_DELETE_APP_CLICK_BY_TIME)){
+                sql = "delete from "  + MlSqLiteOpenHelper.TABLE_ML_EVENT_TABLE + " where id in  "
             }
 
             if (status.equals(ML_STATISTICS_SELECT_APP_CLICK) || status.equals(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)){
@@ -65,6 +71,7 @@ class EnventTableRunnable:Runnable {
                 val cursor = mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.rawQuery(sql, anyArray)
                 cursor?.let {
                     if (!it.moveToFirst()) {//没有任何一条数据
+                        it.close()
                         return
                     }
                     val list = mutableListOf<AppClickEventModel>()
@@ -118,32 +125,96 @@ class EnventTableRunnable:Runnable {
                     raf.write(Gson().toJson(list).toByteArray())
                     raf.close()
 
-                    //进行删除历史记录操作
-                    /*if (isNeedDelete) {
-                        var where = ""
-                        if (status.equals(ML_STATISTICS_SELECT_APP_CLICK)){
-                            where = "createTime < ? and eventName = ? "
-                        }else if (status.equals(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)){
-                            where = "createTime = ? and eventName = ? "
-                        }
-                        mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.delete(
-                                MlSqLiteOpenHelper.TABLE_ML_EVENT_TABLE,
-                                where,
-                                anyArray
-                        )
-                    }*/
-
                     //进行消息发送
                     val message = Message.obtain();
                     message.what = MlStatisticsService.ML_STATISTICS_MSG_WHAT_101;
+                    val operationModel  = OperationModel();
+                    operationModel.mlStatisticeStatus = status;
+                    operationModel.operaStatus = ML_OPERATION_STATUS_SUCCESS
+                    operationModel.filePath = file.absolutePath
                     val bundler = Bundle();
-                    bundler.putString(MlStatisticsService.ML_STATISTICS_APP_CLICK_FILE_PATH, file.absolutePath);
+                    bundler.putParcelable(ML_STATISTICS_OPERATION_CALLBACK,operationModel);
                     message.data = bundler
                     mlStatisticsServiceWeakRefrence!!.get()!!.messengerHandler.sendMessage(message)
                 }
             }else if (status.equals(ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME)){
                 anyArray.add(dayTime.toString())
-                mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.execSQL(sql,anyArray)
+                //查询出ids
+                val idsList = mutableListOf<String>();
+                val idsSql = "select id from " + MlSqLiteOpenHelper.TABLE_ML_EVENT_TABLE + " where createTime = ? and isVisit = 1 "
+                val idCursor = mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.rawQuery(idsSql, anyArray)
+                idCursor?.let {
+                    if (!it.moveToFirst()) {//没有任何一条数据
+                        it.close()
+                        return
+                    }
+                    do {
+                        val id = idCursor.getInt(idCursor.getColumnIndex("id"));
+                        idsList.add(id.toString());
+                    }while (it.moveToNext())
+                    it.close()
+                }
+
+                if (idsList.size > 0){
+                    var ids = "";
+                    for (id in idsList) {
+                        ids = ids + id + ","
+                    }
+                    ids = ids.substring(0,ids.length-1);
+                    val idArray:List<String> =ids.split(",")
+                    for (id in idArray) {
+                        sql = sql + " when " + id +" then 0"
+                    }
+                    sql = sql + " end" + " where id in ( " + ids +" )"
+                    mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.execSQL(sql)
+                    //进行消息发送
+                    val message = Message.obtain();
+                    message.what = MlStatisticsService.ML_STATISTICS_MSG_WHAT_101;
+                    val operationModel  = OperationModel();
+                    operationModel.mlStatisticeStatus = status;
+                    operationModel.operaStatus = ML_OPERATION_STATUS_SUCCESS
+                    val bundler = Bundle();
+                    bundler.putParcelable(ML_STATISTICS_OPERATION_CALLBACK,operationModel);
+                    message.data = bundler
+                    mlStatisticsServiceWeakRefrence!!.get()!!.messengerHandler.sendMessage(message)
+                }
+            }else if (status.equals(ML_STATISTICS_DELETE_APP_CLICK_BY_TIME)){
+                anyArray.add(dayTime.toString())
+                anyArray.add(eventName)
+                val idsList = mutableListOf<String>();
+                val idsSql =  "select id from " + MlSqLiteOpenHelper.TABLE_ML_EVENT_TABLE + " t where t.createTime < ? and t.eventName = ? "
+                val idCursor = mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.rawQuery(idsSql, anyArray)
+                idCursor?.let {
+                    if (!it.moveToFirst()) {//没有任何一条数据
+                        it.close()
+                        return
+                    }
+                    do {
+                        val id = idCursor.getInt(idCursor.getColumnIndex("id"));
+                        idsList.add(id.toString());
+                    }while (it.moveToNext())
+                    it.close()
+                }
+
+
+                if (idsList.size > 0){
+                    var ids = "";
+                    for (id in idsList) {
+                        ids = ids + id + ","
+                    }
+                    ids = ids.substring(0,ids.length-1);
+                    sql = sql + "( " + ids+" )";
+                    mlStatisticsServiceWeakRefrence!!.get()!!.mlSqLiteOpenHelper!!.execSQL(sql)
+                    val message = Message.obtain();
+                    message.what = MlStatisticsService.ML_STATISTICS_MSG_WHAT_101;
+                    val operationModel  = OperationModel();
+                    operationModel.mlStatisticeStatus = status;
+                    operationModel.operaStatus = ML_OPERATION_STATUS_SUCCESS
+                    val bundler = Bundle();
+                    bundler.putParcelable(ML_STATISTICS_OPERATION_CALLBACK,operationModel);
+                    message.data = bundler
+                    mlStatisticsServiceWeakRefrence!!.get()!!.messengerHandler.sendMessage(message)
+                }
             }
             
         }

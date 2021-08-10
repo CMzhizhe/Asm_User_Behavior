@@ -97,10 +97,19 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
             }
         })
 
+        //更新点击时间，包含今天
         val updateClick = findViewById<Button>(R.id.update_click);
         updateClick.setOnClickListener(object :View.OnClickListener{
             override fun onClick(v: View?) {
                 SensorsDataAPI.getInstance().updateHistoryAppClickDataByTime(yyyyMMddDate.time);
+            }
+        })
+
+        //删除点击事件，不含今天
+        val deleteClick = findViewById<Button>(R.id.delete_click_not_include_today)
+        deleteClick.setOnClickListener(object :View.OnClickListener{
+            override fun onClick(v: View?) {
+                SensorsDataAPI.getInstance().deleteHistoryAppClickDataNotIncludingToday();
             }
         })
     }

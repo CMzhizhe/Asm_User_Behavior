@@ -20,7 +20,9 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.gxx.collectionuserbehaviorlibrary.model.AppClickEventModel;
 import com.gxx.collectionuserbehaviorlibrary.model.CostMethodModel;
+import com.gxx.collectionuserbehaviorlibrary.model.OperationModel;
 import com.gxx.collectionuserbehaviorlibrary.model.StatisticesModel;
+import com.gxx.collectionuserbehaviorlibrary.runable.ParseLocalCacheFileRunnable;
 import com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService;
 import com.gxx.collectionuserbehaviorlibrary.utils.FileUtils;
 
@@ -28,12 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -45,10 +42,13 @@ import java.util.concurrent.Executors;
 import static android.content.Context.BIND_AUTO_CREATE;
 import static com.gxx.collectionuserbehaviorlibrary.Constant.CONSTANT_APP_CLICK;
 import static com.gxx.collectionuserbehaviorlibrary.Constant.CONSTANT_APP_COST_METHOD_TIME;
-import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_APP_CLICK_FILE_PATH;
+import static com.gxx.collectionuserbehaviorlibrary.runable.ParseLocalCacheFileRunnable.PARSE_LOCAL_CACHE_FILE;
+import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_OPERATION_STATUS_SUCCESS;
+import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_DELETE_APP_CLICK_BY_TIME;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_INSERT_APP_CLICK;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_INSERT_METHOD_COST_TIME;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_MSG_WHAT_FROM_CLIENT_100;
+import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_OPERATION_CALLBACK;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_SELECT_APP_CLICK;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_SELECT_APP_CLICK_BY_TIME;
 import static com.gxx.collectionuserbehaviorlibrary.service.MlStatisticsService.ML_STATISTICS_STATISTICES_JSON_MODEL;
@@ -75,13 +75,14 @@ public class SensorsDataAPI {
     private OnSensorsDataUserUniCodeListener onSensorsDataUserUniCodeListener;//用户唯一userUnicode
     private OnSensorsDataAPITrackAllClickListener onSensorsDataAPITrackAllClickListener;//所有的点击统计事件
 
-    private MessageHandler messageHandler = null;
+    public MessageHandler messageHandler = null;
     private Messenger clientMessenger = null;//客户端
     //服务器通信使用
     private Messenger serviceMessenger = null;
     private Application application = null;
     private boolean isDebug = false;//是否为debug模式
     private ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    public static String PARSE_CONTENT = "";//内容存放
 
     public void setOnSensorsDataAPITrackCostTimeListener(OnSensorsDataAPITrackCostTimeListener onSensorsDataAPITrackCostTimeListener) {
         this.onSensorsDataAPITrackCostTimeListener = onSensorsDataAPITrackCostTimeListener;
@@ -102,34 +103,35 @@ public class SensorsDataAPI {
         this.onSensorsDataAPITrackAllClickListener = onSensorsDataAPITrackAllClickListener;
     }
 
-    public static class Builder{
+    public static class Builder {
         private Application application;
         private Boolean isDebug;
-        public Builder  setApplication(Application application) {
+
+        public Builder setApplication(Application application) {
             this.application = application;
             return this;
         }
 
-        public Builder  setDebug(Boolean debug) {
+        public Builder setDebug(Boolean debug) {
             isDebug = debug;
             return this;
         }
 
-        public SensorsDataAPI build(){
+        public SensorsDataAPI build() {
             return new SensorsDataAPI(this);
         }
     }
 
-    public SensorsDataAPI(){
+    public SensorsDataAPI() {
         super();
     }
 
-    private SensorsDataAPI(Builder builder){
-        if (INSTANCE == null){
-            synchronized (SensorsDataAPI.class){
-                if (INSTANCE == null){
+    private SensorsDataAPI(Builder builder) {
+        if (INSTANCE == null) {
+            synchronized (SensorsDataAPI.class) {
+                if (INSTANCE == null) {
                     INSTANCE = new SensorsDataAPI();
-                    INSTANCE.init(builder.application,builder.isDebug);
+                    INSTANCE.init(builder.application, builder.isDebug);
                 }
             }
         }
@@ -268,7 +270,7 @@ public class SensorsDataAPI {
     };
 
 
-    private static class MessageHandler extends Handler {
+    public static class MessageHandler extends Handler {
         private WeakReference<SensorsDataAPI> sensorsDataAPIWeakReference = null;
 
         public MessageHandler(SensorsDataAPI sensorsDataAPI, Looper looper) {
@@ -283,29 +285,41 @@ public class SensorsDataAPI {
                 return;
             }
             if (msg.what == ML_STATISTICS_MSG_WHAT_FROM_SERVICE_10) {//从服务器传递来消息
-                //解析文件，将最终结果转为一个json
-                String filePath = msg.getData().getString(ML_STATISTICS_APP_CLICK_FILE_PATH);
-                sensorsDataAPIWeakReference.get().singleThreadExecutor.execute(new ParseLocalCacheFileRunnable(sensorsDataAPIWeakReference.get(), filePath));
-            } else if (msg.what == ML_STATISTICS_MSG_WHAT_20) {//通知结果
-                try {
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("event", CONSTANT_APP_CLICK);
-                    if (sensorsDataAPIWeakReference.get().mDeviceInfo != null) {
-                        JSONObject deviceInfoJsonObject = new JSONObject(sensorsDataAPIWeakReference.get().mDeviceInfo);
-                        jsonObject.put("deviceInfo", deviceInfoJsonObject);
-                    }
-                    if (msg.obj != null) {
-                        String jsonArrayString = msg.obj.toString();
-                        if (!TextUtils.isEmpty(jsonArrayString)) {
-                            JSONArray jsonArray = new JSONArray(jsonArrayString); //将String转换成JsonArray对象
-                            jsonObject.put("list", jsonArray);
+                if (msg.getData() != null && msg.getData().getString(ML_STATISTICS_OPERATION_CALLBACK) != null) {
+                    OperationModel operationModel = sensorsDataAPIWeakReference.get().gson.fromJson(msg.getData().getString(ML_STATISTICS_OPERATION_CALLBACK), OperationModel.class);
+                    if (operationModel.getOperaStatus() == ML_OPERATION_STATUS_SUCCESS) {
+                        //查询，事件
+                        if (operationModel.getMlStatisticeStatus().equals(ML_STATISTICS_SELECT_APP_CLICK) || operationModel.getMlStatisticeStatus().equals(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME)) {
+                            String filePath = operationModel.getFilePath();
+                            sensorsDataAPIWeakReference.get().singleThreadExecutor.execute(new ParseLocalCacheFileRunnable(sensorsDataAPIWeakReference.get(), filePath));
+                        }else if (operationModel.getMlStatisticeStatus().equals(ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME) || operationModel.getMlStatisticeStatus().equals(ML_STATISTICS_DELETE_APP_CLICK_BY_TIME)){
+                            if (sensorsDataAPIWeakReference.get().isDebug){
+                                Log.i(TAG,"操作成功");
+                            }
                         }
                     }
-                    if (sensorsDataAPIWeakReference != null && sensorsDataAPIWeakReference.get() != null && sensorsDataAPIWeakReference.get().onSensorsDataAPITrackAllClickListener != null) {
-                        sensorsDataAPIWeakReference.get().onSensorsDataAPITrackAllClickListener.onSensorsDataAPITrackAllClick(jsonObject);
+                }
+            } else if (msg.what == ML_STATISTICS_MSG_WHAT_20) {//通知结果
+                if (msg.getData() != null) {
+                    OperationModel operationModel = msg.getData().getParcelable(ML_STATISTICS_OPERATION_CALLBACK);
+                    if (operationModel.getMlStatisticeStatus().equals(PARSE_LOCAL_CACHE_FILE) && PARSE_CONTENT != null) {//文件解析
+                        try {
+                            JSONObject jsonObject = new JSONObject();
+                            jsonObject.put("event", CONSTANT_APP_CLICK);
+                            if (sensorsDataAPIWeakReference.get().mDeviceInfo != null) {
+                                JSONObject deviceInfoJsonObject = new JSONObject(sensorsDataAPIWeakReference.get().mDeviceInfo);
+                                jsonObject.put("deviceInfo", deviceInfoJsonObject);
+                            }
+                            JSONArray jsonArray = new JSONArray(PARSE_CONTENT); //将String转换成JsonArray对象
+                            jsonObject.put("list", jsonArray);
+                            if (sensorsDataAPIWeakReference != null && sensorsDataAPIWeakReference.get() != null && sensorsDataAPIWeakReference.get().onSensorsDataAPITrackAllClickListener != null) {
+                                sensorsDataAPIWeakReference.get().onSensorsDataAPITrackAllClickListener.onSensorsDataAPITrackAllClick(jsonObject);
+                            }
+                            PARSE_CONTENT = null;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
 
             }
@@ -324,57 +338,8 @@ public class SensorsDataAPI {
 
 
     /**
-     * @date 创建时间:2021/7/26 0026
-     * @auther gaoxiaoxiong
-     * @Descriptiion 解析本地缓存文件
-     * https://www.jianshu.com/p/fdf6178d1a66
-     **/
-    private static class ParseLocalCacheFileRunnable implements Runnable {
-        private String filePath;
-        private WeakReference<SensorsDataAPI> sensorsDataAPIWeakReference = null;
-
-        public ParseLocalCacheFileRunnable(SensorsDataAPI sensorsDataAPI, String filePath) {
-            this.filePath = filePath;
-            sensorsDataAPIWeakReference = new WeakReference<SensorsDataAPI>(sensorsDataAPI);
-        }
-
-        @Override
-        public void run() {
-            if (sensorsDataAPIWeakReference != null && sensorsDataAPIWeakReference.get() != null && !TextUtils.isEmpty(filePath) && sensorsDataAPIWeakReference.get().messageHandler != null) {
-                File file = new File(filePath);
-                if (file.exists()) {
-                    try {
-                        String content = "";
-                        InputStream instream = new FileInputStream(file);
-                        InputStreamReader inputreader = new InputStreamReader(instream, "UTF-8");
-                        BufferedReader buffreader = new BufferedReader(inputreader);
-                        String line = "";
-                        //分行读取
-                        while ((line = buffreader.readLine()) != null) {
-                            content += line;
-                        }
-                        inputreader.close();
-                        buffreader.close();
-                        instream.close();
-                        if (sensorsDataAPIWeakReference.get().messageHandler != null) {
-                            Message message = Message.obtain();
-                            message.what = ML_STATISTICS_MSG_WHAT_20;
-                            message.obj = content;
-                            sensorsDataAPIWeakReference.get().messageHandler.sendMessage(message);
-                        }
-                    } catch (java.io.FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * @param dayTime             格式必须为 yyyy-MM-dd 的long类型
-     * @param isContainSelectTime  是否包含查询的时间 如果是true 获取历史的点击 = dayTime 都获取，如果是false  < dayTime 都获取
+     * @param isContainSelectTime 是否包含查询的时间 如果是true 获取历史的点击 = dayTime 都获取，如果是false  < dayTime 都获取
      * @date 创建时间:2021/7/26 0026
      * @auther gaoxiaoxiong
      * @Descriptiion
@@ -384,7 +349,7 @@ public class SensorsDataAPI {
         statisticesMode.setDayTime(dayTime);
         if (!isContainSelectTime) {
             statisticesMode.setStatisticesType(ML_STATISTICS_SELECT_APP_CLICK);
-        }else {
+        } else {
             statisticesMode.setStatisticesType(ML_STATISTICS_SELECT_APP_CLICK_BY_TIME);
         }
         if (clientMessenger != null && serviceMessenger != null) {
@@ -404,12 +369,12 @@ public class SensorsDataAPI {
 
 
     /**
+     * @param dayTime yyyy-MM-dd 的long类型的时间
      * @date 创建时间:2021/8/9 0009
      * @auther gaoxiaoxiong
      * @Descriptiion 更新点击，是包含当前的时间的，
-     * @param dayTime yyyy-MM-dd 的long类型的时间
      **/
-    public void updateHistoryAppClickDataByTime(long dayTime){
+    public void updateHistoryAppClickDataByTime(long dayTime) {
         StatisticesModel statisticesMode = new StatisticesModel();
         statisticesMode.setDayTime(dayTime);
         statisticesMode.setStatisticesType(ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME);
@@ -428,6 +393,33 @@ public class SensorsDataAPI {
         }
     }
 
+    /**
+     * @date 创建时间:2021/8/10 0010
+     * @auther gaoxiaoxiong
+     * @Descriptiion 删除历史数据，不包含今天的日期
+     **/
+    public void deleteHistoryAppClickDataNotIncludingToday(){
+        try {
+            StatisticesModel statisticesMode = new StatisticesModel();
+            String yyyyMMdd = simpleCreateTimeFormat.format(new Date());
+            Date yyyyMMddDate = simpleCreateTimeFormat.parse(yyyyMMdd);
+            statisticesMode.setDayTime(yyyyMMddDate.getTime());
+            statisticesMode.setStatisticesType(ML_STATISTICS_DELETE_APP_CLICK_BY_TIME);
+            if (clientMessenger != null && serviceMessenger != null) {
+                Message message = Message.obtain();
+                Bundle bundle = new Bundle();
+                bundle.putString(ML_STATISTICS_STATISTICES_JSON_MODEL, gson.toJson(statisticesMode));
+                message.what = ML_STATISTICS_MSG_WHAT_FROM_CLIENT_100;
+                message.setData(bundle);
+                message.replyTo = clientMessenger;
+                serviceMessenger.send(message);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (RemoteException remoteException) {
+            remoteException.printStackTrace();
+        }
+    }
 
     /**
      * @param fileName 文件名称，必须为  yyyy-MM-dd.txt的格式时间，否者会直接异常
@@ -471,8 +463,8 @@ public class SensorsDataAPI {
      * @auther gaoxiaoxiong
      * @Descriptiion 耗时回调
      **/
-    public interface OnSensorsDataAPITrackCostTimeListener{
-        void onSensorsDataAPITrackCostTime(long startTime, long endTime,String className,String methodName);
+    public interface OnSensorsDataAPITrackCostTimeListener {
+        void onSensorsDataAPITrackCostTime(long startTime, long endTime, String className, String methodName);
     }
 
     /**
@@ -480,7 +472,7 @@ public class SensorsDataAPI {
      * @auther gaoxiaoxiong
      * @Descriptiion 耗时统计
      **/
-    public void trackCostTime(long startTime, long endTime,String className,String methodName){
+    public void trackCostTime(long startTime, long endTime, String className, String methodName) {
         try {
             String yyyyMMdd = simpleCreateTimeFormat.format(new Date());
             Date yyyyMMddDate = simpleCreateTimeFormat.parse(yyyyMMdd);
@@ -514,15 +506,15 @@ public class SensorsDataAPI {
             e.printStackTrace();
         }
 
-        if (onSensorsDataAPITrackCostTimeListener!=null){
-            onSensorsDataAPITrackCostTimeListener.onSensorsDataAPITrackCostTime(startTime,endTime,className,methodName);
+        if (onSensorsDataAPITrackCostTimeListener != null) {
+            onSensorsDataAPITrackCostTimeListener.onSensorsDataAPITrackCostTime(startTime, endTime, className, methodName);
         }
-        if (isDebug){
-            Log.i(TAG,"className = " + className);
-            Log.i(TAG,"methodName = " + methodName);
-            Log.i(TAG,"startTime = " + startTime);
-            Log.i(TAG,"endTime = " + endTime);
-            Log.i(TAG,"超时啦");
+        if (isDebug) {
+            Log.i(TAG, "className = " + className);
+            Log.i(TAG, "methodName = " + methodName);
+            Log.i(TAG, "startTime = " + startTime);
+            Log.i(TAG, "endTime = " + endTime);
+            Log.i(TAG, "超时啦");
         }
     }
 

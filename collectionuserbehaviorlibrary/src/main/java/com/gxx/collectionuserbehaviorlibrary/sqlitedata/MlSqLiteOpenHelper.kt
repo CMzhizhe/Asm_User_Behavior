@@ -90,6 +90,19 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
         database.execSQL(sql, bindArgs.toTypedArray())
     }
 
+    /**
+     *
+     * @Title: execSQL
+     * @Description: Sql写入
+     * @param @param sql
+     * @param @param bindArgs
+     * @return void
+     * @author lihy
+     */
+    fun execSQL(sql: String) {
+        val database: SQLiteDatabase = getWritableDatabase()
+        database.execSQL(sql)
+    }
 
     /**
      *
@@ -106,8 +119,10 @@ class MlSqLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, "mluserbe
         return database.rawQuery(sql, bindArgs.toTypedArray())
     }
 
+
+
+
     /**
-     *
      * @Title: insert
      * @Description: 插入数据
      * @param @param table

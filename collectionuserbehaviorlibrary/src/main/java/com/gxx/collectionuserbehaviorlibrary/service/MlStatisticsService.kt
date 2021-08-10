@@ -10,6 +10,7 @@ import com.gxx.collectionuserbehaviorlibrary.Constant.Companion.CONSTANT_APP_CLI
 import com.gxx.collectionuserbehaviorlibrary.Constant.Companion.CONSTANT_FUNCTION_TYPE_00
 import com.gxx.collectionuserbehaviorlibrary.model.AppClickEventModel
 import com.gxx.collectionuserbehaviorlibrary.model.CostMethodModel
+import com.gxx.collectionuserbehaviorlibrary.model.OperationModel
 import com.gxx.collectionuserbehaviorlibrary.model.StatisticesModel
 import com.gxx.collectionuserbehaviorlibrary.runable.EnventTableRunnable
 import com.gxx.collectionuserbehaviorlibrary.sensors.SensorsDataAPI
@@ -34,6 +35,10 @@ class MlStatisticsService : Service() {
         const val TAG = "MlStatisticsService";
         const val ML_STATISTICS_MSG_WHAT_FROM_CLIENT_100 = 100;//从客户端传来消息
         const val ML_STATISTICS_MSG_WHAT_101 = 101;//处理将信息存储到file文件里面，然后要通知前端已经完成
+
+        const val ML_OPERATION_STATUS_SUCCESS = 1;
+        const val ML_OPERATION_STATUS_FAIL = 0;
+
         const val ML_STATISTICS_STATISTICES_JSON_MODEL = "StatisticesJsonModel"
 
         const val ML_STATISTICS_INSERT_APP_CLICK = "InsertAppClick";//点击行为
@@ -42,9 +47,9 @@ class MlStatisticsService : Service() {
         const val ML_STATISTICS_SELECT_APP_CLICK = "selectAppClick";//查询点击的行为
         const val ML_STATISTICS_SELECT_APP_CLICK_BY_TIME = "selectAppClickByTime";//查询某个时间点的时间
         const val ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME = "updateAppClickByTime";//更新数据，根据某个时间点的时间
-        const val ML_STATISTICS_APP_CLICK_FILE_PATH = "appClickFilePath"//文件路径
+        const val ML_STATISTICS_DELETE_APP_CLICK_BY_TIME = "deleteAppClickByTime";//删除数据，根据某个时间点的时间
 
-
+        const val ML_STATISTICS_OPERATION_CALLBACK = "operationCallBack";//操作反馈
     }
 
 
@@ -130,7 +135,12 @@ class MlStatisticsService : Service() {
                     mlStatisticsServiceWeakReference!!.get()!!.singleThreadExecutor.execute(
                             EnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, CONSTANT_APP_CLICK, ML_STATISTICS_UPDATE_APP_CLICK_BY_TIME)
                     )
-                } else if (statisticesModel.statisticesType.equals(ML_STATISTICS_INSERT_METHOD_COST_TIME)) {//耗时方法统计
+                }else if (statisticesModel.statisticesType.equals(ML_STATISTICS_DELETE_APP_CLICK_BY_TIME)){//删除点击事件，不包含今天的时间
+                    mlStatisticsServiceWeakReference!!.get()!!.singleThreadExecutor.execute(
+                            EnventTableRunnable(mlStatisticsServiceWeakReference!!.get()!!, statisticesModel.dayTime, CONSTANT_APP_CLICK, ML_STATISTICS_DELETE_APP_CLICK_BY_TIME)
+                    )
+                }
+                else if (statisticesModel.statisticesType.equals(ML_STATISTICS_INSERT_METHOD_COST_TIME)) {//耗时方法统计
                     val costMethodModel = gson.fromJson<CostMethodModel>(statisticesModel.jsonString, CostMethodModel::class.java);
                     if (costMethodModel != null) {
                         //存储数据到本地
@@ -150,16 +160,21 @@ class MlStatisticsService : Service() {
                         )
                     }
                 }
-            } else if (msg.what == ML_STATISTICS_MSG_WHAT_101) {//文件已经存储到本地了，需要通知前端
+            } else if (msg.what == ML_STATISTICS_MSG_WHAT_101) {//服务处理
                 if (replyToClient == null) {
                     return
                 }
-                val message = Message.obtain();
-                message.data = msg.data;
-                message.what = SensorsDataAPI.ML_STATISTICS_MSG_WHAT_FROM_SERVICE_10
-                replyToClient?.let {
-                    it.replyTo.send(message);
+
+                if (msg.data!=null){
+                    val message = Message.obtain();
+                    val operationModel  = msg.data.getParcelable<OperationModel>(ML_STATISTICS_OPERATION_CALLBACK);
+                    val bundler = Bundle();
+                    bundler.putString(ML_STATISTICS_OPERATION_CALLBACK,gson.toJson(operationModel))
+                    message.data = bundler
+                    message.what = SensorsDataAPI.ML_STATISTICS_MSG_WHAT_FROM_SERVICE_10
+                    replyToClient!!.replyTo.send(message);
                 }
+
             }
         }
     }
