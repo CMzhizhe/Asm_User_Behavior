@@ -429,7 +429,7 @@ public class SensorsDataAPI {
     }
 
     /**
-     * @param fileName 文件名称，必须为  yyyy-MM-dd.txt的格式时间，否者会直接异常
+     * @param fileName 文件名称，必须为  yyyy-MM-dd的long 类型的.txt的格式时间，否者会直接异常
      * @date 创建时间:2021/7/27 0027
      * @auther gaoxiaoxiong
      * @Descriptiion 通过文件名称获取历史记录信息
