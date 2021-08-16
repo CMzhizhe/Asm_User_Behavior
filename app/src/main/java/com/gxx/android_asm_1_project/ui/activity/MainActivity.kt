@@ -114,7 +114,11 @@ class MainActivity : AppCompatActivity() , SensorsDataAPI.OnSensorsDataAPITrackA
         })
     }
 
-
+    /**
+     * @date 创建时间: 2021/8/16
+     * @auther gaoxiaoxiong
+     * @description 耗时标注
+     **/
     public fun readNetWork(){
         Thread(object :Runnable{
             @CostTime

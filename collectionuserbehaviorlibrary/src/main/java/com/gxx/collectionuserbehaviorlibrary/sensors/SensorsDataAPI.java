@@ -349,7 +349,7 @@ public class SensorsDataAPI {
      * @param isContainSelectTime 是否包含查询的时间 如果是true 获取历史的点击 = dayTime 都获取，如果是false  < dayTime 都获取
      * @date 创建时间:2021/7/26 0026
      * @auther gaoxiaoxiong
-     * @Descriptiion
+     * @Descriptiion 获取今天的时间
      **/
     public void getHistoryAppClickData(long dayTime, boolean isContainSelectTime) {
         StatisticesModel statisticesMode = new StatisticesModel();
@@ -379,7 +379,7 @@ public class SensorsDataAPI {
      * @param dayTime yyyy-MM-dd 的long类型的时间
      * @date 创建时间:2021/8/9 0009
      * @auther gaoxiaoxiong
-     * @Descriptiion 更新点击，是包含当前的时间的，
+     * @Descriptiion 更新点击，是包含当前的时间的，作用是以后查询数据，不会再次查询出这个时间点的
      **/
     public void updateHistoryAppClickDataByTime(long dayTime) {
         StatisticesModel statisticesMode = new StatisticesModel();
@@ -452,6 +452,11 @@ public class SensorsDataAPI {
         void onSensorsDataEveryTimeAPITrackClick(JSONObject jsonObject);
     }
 
+    /**
+     * @date 创建时间: 2021/8/16
+     * @auther gaoxiaoxiong
+     * @description 可以往数据库插入用户唯一ID，用于识别
+     **/
     public interface OnSensorsDataUserUniCodeListener {
         String onUserUniCode();
     }
